@@ -1,17 +1,14 @@
-from src.processing import processar_serie_temporal
+from src.processing import processar_serie_temporal_2026
 from src.report import gerar_relatorio_pdf
+from src.config import AREA_OFICIAL_HA, OUTPUT_DIR
 
 if __name__ == "__main__":
-    output_directory = "output"
-    shapefile_dummy = "dummy.shp"
-    area_oficial = 1450.0  # ha
+    print("--- Iniciando Pipeline de Monitoramento Ambiental: UHE Risoleta Neves ---")
     
-    print("--- Iniciando monitoramento para: UHE Risoleta Neves (Candonga) ---")
+    # Processa os dados espaciais e a série histórica
+    dados_serie, imagens_2026 = processar_serie_temporal_2026()
     
-    # processar_serie_temporal retorna (dados_mensais, imagens_2026)
-    dados_serie, imagens_2026 = processar_serie_temporal(shapefile_dummy, output_directory)
+    # Compila o relatório em PDF consolidado
+    gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFICIAL_HA)
     
-    # A ordem dos parâmetros em gerar_relatorio_pdf é: (dados, imagens_2026, output_dir, area_oficial_ha)
-    gerar_relatorio_pdf(dados_serie, imagens_2026, output_directory, area_oficial)
-    
-    print("Execucao concluida com sucesso!")
+    print("Pipeline executado com sucesso! Relatório gerado na pasta outputs/.")
