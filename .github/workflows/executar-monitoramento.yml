@@ -3,7 +3,7 @@ name: Monitoramento UHE Risoleta Neves
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Permite rodar manualmente pelo site do GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,5 +24,7 @@ jobs:
         pip install geopandas matplotlib fpdf2 shapely requests
 
     - name: Executar script de monitoramento
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
         python main.py
