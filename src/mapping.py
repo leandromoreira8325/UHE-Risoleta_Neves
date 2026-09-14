@@ -6,8 +6,8 @@ import numpy as np
 
 def gerar_mapa_macrophitas(shapefile_path, output_dir):
     """
-    Gera o mapa temático espacializado do reservatório da UHE Risoleta Neves
-    evidenciando os bancos de macrófitas e salva como PNG na pasta de outputs.
+    Gera o mapa temático do reservatório da UHE Risoleta Neves evidenciando
+    os locais com macrófitas e salva como PNG na pasta de outputs.
     """
     os.makedirs(output_dir, exist_ok=True)
     mapa_path = os.path.join(output_dir, "mapa_macrophitas.png")
