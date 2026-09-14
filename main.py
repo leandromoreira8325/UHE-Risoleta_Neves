@@ -1,6 +1,3 @@
-"""
-Script Principal - Automação de Monitoramento de Macrófitas
-"""
 import os
 from src.config import OUTPUT_DIR, UHE_NOME, AREA_OFICIAL_AGUA_HA, SHAPEFILE_RESERVATORIO
 from src.processing import processar_serie_temporal
@@ -11,13 +8,11 @@ def main():
     
     print(f"--- Iniciando monitoramento para: {UHE_NOME} ---")
     
-    # Processa as cenas e métricas
     dados_mensais = processar_serie_temporal(
         shapefile_path=SHAPEFILE_RESERVATORIO,
         output_dir=OUTPUT_DIR
     )
     
-    # Gera o relatório PDF consolidado
     gerar_relatorio_pdf(
         dados=dados_mensais,
         output_dir=OUTPUT_DIR,
