@@ -1,9 +1,9 @@
 import os
 
-UHE_NOME = "UHE Risoleta Neves (Candonga)"
-REGIAO_ATUACAO = "Alto/Médio Rio Doce (Rio Casca / Santa Cruz do Escalvado)"
-AREA_OFICIAL_AGUA_HA = 1450.0  
+# Configurações do Reservatório da UHE Risoleta Neves (Candonga)
+AREA_OFICIAL_HA = 1450.0  # Área oficial do reservatório em hectares
 
-# Apontando para o arquivo QLR correto localizado na pasta data
-SHAPEFILE_RESERVATORIO = os.path.join("data", "Resrevatório Candonga.qlr")
-OUTPUT_DIR = "output"
+# Diretórios do projeto
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+OUTPUT_DIR = os.path.join(BASE_DIR, 'outputs')
+DATA_DIR = os.path.join(BASE_DIR, 'data')
