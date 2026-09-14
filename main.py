@@ -1,25 +1,17 @@
-import os
-from src.config import OUTPUT_DIR, UHE_NOME, AREA_OFICIAL_AGUA_HA, SHAPEFILE_RESERVATORIO
 from src.processing import processar_serie_temporal
 from src.report import gerar_relatorio_pdf
 
-def main():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    
-    print(f"--- Iniciando monitoramento para: {UHE_NOME} ---")
-    
-    dados_mensais = processar_serie_temporal(
-        shapefile_path=SHAPEFILE_RESERVATORIO,
-        output_dir=OUTPUT_DIR
-    )
-    
-    gerar_relatorio_pdf(
-        dados=dados_mensais,
-        output_dir=OUTPUT_DIR,
-        area_oficial_ha=AREA_OFICIAL_AGUA_HA
-    )
-    
-    print("[FLUXO CONCLUÍDO] Processamento finalizado com sucesso.")
-
 if __name__ == "__main__":
-    main()
+    output_directory = "output"
+    shapefile_dummy = "dummy.shp"
+    area_oficial = 1450.0  # ha
+    
+    print("--- Iniciando monitoramento para: UHE Risoleta Neves (Candonga) ---")
+    
+    # processar_serie_temporal retorna (dados_mensais, imagens_2026)
+    dados_serie, imagens_2026 = processar_serie_temporal(shapefile_dummy, output_directory)
+    
+    # A ordem dos parâmetros em gerar_relatorio_pdf é: (dados, imagens_2026, output_dir, area_oficial_ha)
+    gerar_relatorio_pdf(dados_serie, imagens_2026, output_directory, area_oficial)
+    
+    print("Execucao concluida com sucesso!")
