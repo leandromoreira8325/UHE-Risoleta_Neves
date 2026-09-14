@@ -2,7 +2,7 @@ import os
 import glob
 import geopandas as gpd
 import numpy as np
-from src.config import AREA_OFICIAL_HA, OUTPUT_DIR
+from src.config import AREA_OFFICIAL_HA, OUTPUT_DIR
 from src.copernicus_api import CopernicusAPI
 from src.mapping import gerar_mapa_macrophitas
 from src.report import gerar_relatorio_pdf
@@ -10,7 +10,7 @@ from src.report import gerar_relatorio_pdf
 def processar_serie_temporal_2026():
     print("--- Iniciando Pipeline de Monitoramento Ambiental: UHE Risoleta Neves ---")
     
-    # 1. Localiza o Shapefile na raiz ou pastas internas
+    # Localiza o Shapefile na raiz do repositório
     shape_files = glob.glob("*UHE_Risoleta_Neves_Reservatorio.shp") + glob.glob("**/*UHE_Risoleta_Neves_Reservatorio.shp", recursive=True)
     if not shape_files:
         raise FileNotFoundError("[ERRO] Shapefile 'UHE_Risoleta_Neves_Reservatorio.shp' não encontrado no projeto.")
@@ -24,7 +24,7 @@ def processar_serie_temporal_2026():
         
     bounds = gdf.total_bounds  # [minx, miny, maxx, maxy]
     
-    # 2. Inicializa a API Copernicus e coleta os dados de 2026
+    # Inicializa a API Copernicus e coleta os dados de 2026
     api = CopernicusAPI()
     token = api.obter_token()
     
@@ -51,7 +51,7 @@ def processar_serie_temporal_2026():
         if data_aquisicao:
             imagens_2026[nome_mes] = data_aquisicao
             percentual_area = round(float(np.random.uniform(4.5, 9.2)), 2)
-            area_ha = round((percentual_area / 100.0) * AREA_OFICIAL_HA, 2)
+            area_ha = round((percentual_area / 100.0) * AREA_OFFICIAL_HA, 2)
             dados_serie.append({
                 "mes": f"{nome_mes}/2026",
                 "data_aquisicao": data_aquisicao,
@@ -61,7 +61,7 @@ def processar_serie_temporal_2026():
             })
         else:
             percentual_area = round(float(np.random.uniform(4.0, 8.5)), 2)
-            area_ha = round((percentual_area / 100.0) * AREA_OFICIAL_HA, 2)
+            area_ha = round((percentual_area / 100.0) * AREA_OFFICIAL_HA, 2)
             dados_serie.append({
                 "mes": f"{nome_mes}/2026",
                 "data_aquisicao": f"{dt_ini[:8]}15",
@@ -70,12 +70,12 @@ def processar_serie_temporal_2026():
                 "status": "Simulação Espectral de Respaldo"
             })
 
-    # 3. Gera o Mapa Geoespacial das Macrófitas
+    # Gera o Mapa Geoespacial das Macrófitas
     print("[PROCESSING] Gerando mapa cartográfico do reservatório...")
     mapa_path = gerar_mapa_macrophitas(shapefile_path, OUTPUT_DIR)
 
-    # 4. Compila o Relatório PDF Consolidado (com Tabela + Mapa)
-    gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFICIAL_HA, mapa_path)
+    # Compila o Relatório PDF Consolidado (Tabela + Mapa)
+    gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFFICIAL_HA, mapa_path)
     
     print("Pipeline executado com sucesso! Relatório e mapas gerados na pasta outputs/.")
     return dados_serie, imagens_2026
