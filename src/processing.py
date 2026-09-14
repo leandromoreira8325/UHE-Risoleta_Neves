@@ -2,7 +2,7 @@ import os
 import glob
 import geopandas as gpd
 import numpy as np
-from src.config import AREA_OFFICIAL_HA, OUTPUT_DIR
+from src.config import AREA_OFICIAL_HA, OUTPUT_DIR
 from src.copernicus_api import CopernicusAPI
 from src.mapping import gerar_mapa_macrophitas
 from src.report import gerar_relatorio_pdf
