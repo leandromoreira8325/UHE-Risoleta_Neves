@@ -1,0 +1,7 @@
+geopandas
+matplotlib
+shapely
+reportlab
+numpy
+requests
+rasterio
