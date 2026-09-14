@@ -1,6 +1,5 @@
 import os
 import requests
-from datetime import datetime
 
 class CopernicusDataSpaceAPI:
     def __init__(self):
@@ -11,7 +10,7 @@ class CopernicusDataSpaceAPI:
 
     def obter_token(self):
         if not self.client_id or not self.client_secret:
-            print("[AVISO COPERNICUS] Credenciais não informadas. Utilizando modo de simulação determinística para CI/CD.")
+            print("[AVISO COPERNICUS] Credenciais de API não detectadas. Executando em modo de simulação determinística para CI/CD.")
             return None
         
         data = {
@@ -28,7 +27,6 @@ class CopernicusDataSpaceAPI:
         return None
 
     def buscar_dados_completos(self, token, bounds, data_inicio, data_fim):
-        # Retorna metadados consistentes para o pipeline
         product_id = f"s2_scene_{data_inicio.replace('-', '')}"
         data_aquisicao = f"{data_inicio[:8]}27" if "01" in data_inicio else f"{data_inicio[:8]}28"
         return product_id, data_aquisicao
