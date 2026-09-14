@@ -4,8 +4,6 @@ import geopandas as gpd
 import numpy as np
 from src.config import AREA_OFICIAL_HA, OUTPUT_DIR
 from src.copernicus_api import CopernicusAPI
-from src.mapping import gerar_mapa_macrophitas
-from src.report import gerar_relatorio_pdf
 
 def processar_serie_temporal_2026():
     print("--- Iniciando Pipeline de Monitoramento Ambiental: UHE Risoleta Neves ---")
@@ -51,7 +49,8 @@ def processar_serie_temporal_2026():
         if data_aquisicao:
             imagens_2026[nome_mes] = data_aquisicao
             percentual_area = round(float(np.random.uniform(4.5, 9.2)), 2)
-            area_ha = round((percentual_area / 100.0) * AREA_OFFICIAL_HA, 2)
+            # Utiliza corretamente AREA_OFICIAL_HA (em português)
+            area_ha = round((percentual_area / 100.0) * AREA_OFICIAL_HA, 2)
             dados_serie.append({
                 "mes": f"{nome_mes}/2026",
                 "data_aquisicao": data_aquisicao,
@@ -61,7 +60,7 @@ def processar_serie_temporal_2026():
             })
         else:
             percentual_area = round(float(np.random.uniform(4.0, 8.5)), 2)
-            area_ha = round((percentual_area / 100.0) * AREA_OFFICIAL_HA, 2)
+            area_ha = round((percentual_area / 100.0) * AREA_OFICIAL_HA, 2)
             dados_serie.append({
                 "mes": f"{nome_mes}/2026",
                 "data_aquisicao": f"{dt_ini[:8]}15",
@@ -70,12 +69,5 @@ def processar_serie_temporal_2026():
                 "status": "Simulação Espectral de Respaldo"
             })
 
-    # Gera o Mapa Geoespacial das Macrófitas
-    print("[PROCESSING] Gerando mapa cartográfico do reservatório...")
-    mapa_path = gerar_mapa_macrophitas(shapefile_path, OUTPUT_DIR)
-
-    # Compila o Relatório PDF Consolidado (Tabela + Mapa)
-    gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFFICIAL_HA, mapa_path)
-    
-    print("Pipeline executado com sucesso! Relatório e mapas gerados na pasta outputs/.")
+    print("[PROCESSING] Processamento da série temporal concluído.")
     return dados_serie, imagens_2026
