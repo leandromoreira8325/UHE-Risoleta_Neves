@@ -20,7 +20,7 @@ if __name__ == "__main__":
         print("[AVISO] Shapefile não encontrado para gerar o mapa. O relatório será gerado apenas com a tabela.")
         mapa_path = None
 
-    # 3. Compila o relatório em PDF consolidado (incluindo a tabela e o mapa na 2ª página)
-    gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFFICIAL_HA, mapa_path)
+    # 3. Compila o relatório em PDF consolidado usando AREA_OFICIAL_HA corretos
+    gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFICIAL_HA, mapa_path)
     
     print("Pipeline executado com sucesso! Relatório e mapa gerados na pasta outputs/.")
