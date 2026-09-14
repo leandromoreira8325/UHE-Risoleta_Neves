@@ -1,8 +1,8 @@
+import glob
 from src.processing import processar_serie_temporal_2026
 from src.mapping import gerar_mapa_macrophitas
 from src.report import gerar_relatorio_pdf
 from src.config import AREA_OFICIAL_HA, OUTPUT_DIR
-import glob
 
 if __name__ == "__main__":
     print("--- Iniciando Pipeline de Monitoramento Ambiental: UHE Risoleta Neves ---")
@@ -20,7 +20,7 @@ if __name__ == "__main__":
         print("[AVISO CRÍTICO] Shapefile não localizado para geração do mapa vetorial.")
         mapa_path = None
 
-    # 3. Compila o relatório executivo oficial em PDF (Página 1: Tabela analítica | Página 2: Mapa espacial do shapefile)
+    # 3. Compila o relatório executivo oficial em PDF
     gerar_relatorio_pdf(dados_serie, imagens_2026, OUTPUT_DIR, AREA_OFICIAL_HA, mapa_path)
     
-    print("Pipeline executado com total integridade! Relatório e mapa auditáveis salvos na pasta outputs/.")
+    print("Pipeline executado com total integridade! Relatório e mapa auditáveis salvos na pasta 'outputs/'.")
