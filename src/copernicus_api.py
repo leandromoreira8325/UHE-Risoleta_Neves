@@ -10,7 +10,7 @@ class CopernicusAPI:
 
     def obter_token(self):
         if not self.client_id or not self.client_secret:
-            print("[COPERNICUS API] Credenciais não detectadas.")
+            print("[COPERNICUS API] Credenciais não detectadas no ambiente.")
             return None
 
         payload = {
@@ -24,12 +24,12 @@ class CopernicusAPI:
             if response.status_code == 200:
                 return response.json().get("access_token")
         except Exception as e:
-            print(f"[ERRO] Falha ao obter token: {e}")
+            print(f"[ERRO] Falha ao obter token Copernicus: {e}")
         return None
 
     def buscar_dados_completos(self, token, bbox, dt_inicio, dt_fim, max_cloud=35):
         """
-        Busca a cena Sentinel-2 real, obtém a data e os metadados de acesso para download raster.
+        Busca a cena Sentinel-2 real na área do reservatório utilizando OData.
         """
         if not token:
             return None, None
@@ -62,10 +62,8 @@ class CopernicusAPI:
                     product_id = produto.get("Id")
                     data_aquisicao = produto.get("ContentDate", {}).get("Start", "")[:10]
                     print(f"[COPERNICUS API] Cena real encontrada (ID: {product_id}) para {data_aquisicao}")
-                    
-                    # Retornamos o product_id para que o processamento saiba qual cena baixar
                     return product_id, data_aquisicao
         except Exception as e:
-            print(f"[ERRO] Falha na consulta OData: {e}")
+            print(f"[ERRO] Falha na consulta OData Copernicus: {e}")
 
         return None, None
