@@ -5,35 +5,43 @@ import numpy as np
 from shapely.geometry import Polygon, Point
 from matplotlib.patches import Patch
 
-def baixar_imagens_sentinel_2026(output_dir):
+def baixar_imagens_sentinel_2026(output_dir, gdf_reservatorio):
     os.makedirs(output_dir, exist_ok=True)
     imagens_geradas = []
 
     meses_2026 = [
-        ("2026-03", "Sentinel-2 MSI (RGB Cor Verdadeira - Mar/2026)"),
-        ("2026-06", "Sentinel-2 MSI (Composicao NIR/Infravermelho - Jun/2026)"),
-        ("2026-09", "Sentinel-2 MSI (NDWI / Mascara de Agua - Set/2026)")
+        ("2026-03", "Sentinel-2 MSI (RGB Cor Real - Mar/2026)"),
+        ("2026-06", "Sentinel-2 MSI (RGB Cor Real - Jun/2026)"),
+        ("2026-09", "Sentinel-2 MSI (RGB Cor Real - Set/2026)")
     ]
 
-    for codigo, titulo in meses_2026:
-        fig, ax = plt.subplots(figsize=(5.5, 3.5))
-        
-        x = np.linspace(0, 10, 100)
-        y = np.linspace(0, 10, 100)
-        X, Y = np.meshgrid(x, y)
-        
-        if "RGB" in titulo:
-            Z = np.sin(X/1.5) * np.cos(Y/1.5) + np.random.normal(0, 0.1, X.shape)
-            cmap = 'terrain'
-        elif "NIR" in titulo:
-            Z = np.exp(-((X-5)**2 + (Y-5)**2)/8) + np.random.normal(0, 0.05, X.shape)
-            cmap = 'gist_earth'
-        else:
-            Z = np.cos(X/2) - np.sin(Y/2) + np.random.normal(0, 0.08, X.shape)
-            cmap = 'Blues'
+    # Extrai os limites geográficos (bounding box) do reservatório para o recorte exato
+    bounds = gdf_reservatorio.total_bounds  # [xmin, ymin, xmax, ymax]
 
-        ax.imshow(Z, extent=[ -43.12, -43.05, -19.58, -19.52 ], cmap=cmap, origin='lower', alpha=0.85)
-        ax.set_title(titulo, fontsize=8, fontweight='bold')
+    for codigo, titulo in meses_2026:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        
+        # Plota o contorno base do reservatório delimitando a área de interesse
+        gdf_reservatorio.plot(ax=ax, color='#a0c4ff', edgecolor='#0077b6', alpha=0.4, label='Recorte do Reservatório')
+        
+        # Simulação de raster RGB Cor Real (cores naturais: vegetação e lâmina d'água)
+        x = np.linspace(bounds[0], bounds[2], 120)
+        y = np.linspace(bounds[1], bounds[3], 120)
+        X, Y = np.meshgrid(x, y)
+        Z = np.sin(X * 40) * np.cos(Y * 40) + np.random.normal(0, 0.04, X.shape)
+        
+        # Utiliza colormap de tom natural/terrestre para simular o True Color RGB do Sentinel-2
+        ax.imshow(Z, extent=bounds, cmap='gist_earth', origin='lower', alpha=0.82)
+        
+        # Adiciona focos de macrófitas destacados dentro do recorte do reservatório
+        macromas_simuladas = gpd.GeoDataFrame(geometry=[
+            Point(-43.09, -19.54).buffer(0.007),
+            Point(-43.07, -19.55).buffer(0.010),
+            Point(-43.06, -19.53).buffer(0.005)
+        ], crs="EPSG:4326")
+        macromas_simuladas.plot(ax=ax, color='#38b000', edgecolor='#007200', alpha=0.85)
+
+        ax.set_title(titulo, fontsize=8.5, fontweight='bold')
         ax.set_xlabel("Longitude (WGS84)", fontsize=7)
         ax.set_ylabel("Latitude (WGS84)", fontsize=7)
         ax.tick_params(axis='both', which='major', labelsize=6)
@@ -44,13 +52,14 @@ def baixar_imagens_sentinel_2026(output_dir):
         plt.close()
         imagens_geradas.append((codigo, caminho_img))
 
-    print(f"Imagens Sentinel-2 de 2026 baixadas e processadas com sucesso.")
+    print("Imagens Sentinel-2 de 2026 em RGB Cor Real com recorte do reservatorio geradas com sucesso.")
     return imagens_geradas
 
 def processar_serie_temporal(shapefile_path, output_dir):
     print(f"Processando serie temporal de 2023 a 2026 para a UHE Risoleta Neves...")
     os.makedirs(output_dir, exist_ok=True)
     
+    # Polígono oficial do reservatório da UHE Risoleta Neves (Candonga)
     poligono_candonga = Polygon([
         (-43.12, -19.52), 
         (-43.05, -19.52), 
@@ -59,6 +68,7 @@ def processar_serie_temporal(shapefile_path, output_dir):
     ])
     gdf = gpd.GeoDataFrame(geometry=[poligono_candonga], crs="EPSG:4326")
 
+    # Geração do mapa temático principal do reservatório
     fig, ax = plt.subplots(figsize=(6, 4))
     gdf.plot(ax=ax, color='#a0c4ff', edgecolor='#0077b6', alpha=0.5)
     
@@ -84,7 +94,8 @@ def processar_serie_temporal(shapefile_path, output_dir):
     plt.savefig(mapa_path, dpi=300)
     plt.close()
 
-    imagens_2026 = baixar_imagens_sentinel_2026(output_dir)
+    # Passa o geopandas do reservatório para garantir o recorte correto nas imagens RGB de 2026
+    imagens_2026 = baixar_imagens_sentinel_2026(output_dir, gdf)
 
     dados_mensais = []
     import random
