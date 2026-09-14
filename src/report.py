@@ -1,7 +1,7 @@
 import os
 from fpdf import FPDF
 
-def gerar_relatorio_pdf(dados, output_dir, area_oficial_ha):
+def gerar_relatorio_pdf(dados, imagens_2026, output_dir, area_oficial_ha):
     os.makedirs(output_dir, exist_ok=True)
     pdf_path = os.path.join(output_dir, "relatorio_monitoramento.pdf")
     
@@ -26,31 +26,49 @@ def gerar_relatorio_pdf(dados, output_dir, area_oficial_ha):
     pdf.cell(0, 6, "1. Metodologia Utilizada para os Calculos", 0, 1)
     pdf.set_font("Arial", "", 8.5)
     texto_metodologia = (
-        "O monitoramento da cobertura de macrofitas na UHE Risoleta Neves baseia-se no "
-        "sensoriamento remoto orbital utilizando imagens multiespectrais da constelacao Copernicus "
-        "(Sentinel-2, com resolucao espacial de 10 metros). O processamento automatizado executa: "
-        "(a) Correcao atmosferica e conversao radiometricas das bandas B3 (Verde), B4 (Vermelho) e "
-        "B8 (Infravermelho Proximo - NIR); (b) Aplicacao do Indice Diferencial de Agua Normalizado "
-        "(NDWI) para delimitacao precisa da lamina d'agua do reservatorio; (c) Aplicacao do Indice "
-        "de Vegetacao da Diferenca Normalizada (NDVI) integrado a limiares espectrais para deteccao "
-        "de biomassa vegetal flutuante e emersa; (d) Calculo geoespacial vetorial da area total em "
-        "hectares (ha) e percentual relativo a area oficial do reservatorio (1.450 ha)."
+        f"O monitoramento da cobertura de macrofitas na UHE Risoleta Neves baseia-se no "
+        f"sensoriamento remoto orbital utilizando imagens multiespectrais da constelacao Copernicus "
+        f"(Sentinel-2, com resolucao espacial de 10 metros). A area de referencia oficial considerada "
+        f"para o reservatorio e de {area_oficial_ha} ha. O processamento automatizado executa: "
+        f"(a) Correcao atmosferica e conversao radiometricas das bandas B3 (Verde), B4 (Vermelho) e NIR; "
+        f"(b) Aplicacao de limiares espectrais para deteccao de biomassa vegetal flutuante e emersa; "
+        f"(c) Calculo geoespacial vetorial da area total em hectares (ha) e percentual relativo."
     )
     pdf.multi_cell(0, 4.2, texto_metodologia)
     pdf.ln(3)
     
-    # 2. Mapa Temático
+    # 2. Imagens Sentinel-2 Baixadas para o Ano de 2026
     pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 6, "2. Mapa Tematico de Concentracao de Macrofitas", 0, 1)
-    mapa_path = os.path.join(output_dir, "mapa_macromas.png")
-    if os.path.exists(mapa_path):
-        pdf.image(mapa_path, x=40, w=130)
-    pdf.ln(3)
-    
-    # 3. Série Histórica (2023 a 2026)
+    pdf.cell(0, 6, "2. Imagens Orbitais Sentinel-2 Baixadas (Ano 2026)", 0, 1)
+    pdf.set_font("Arial", "", 8)
+    pdf.cell(0, 4, "Abaixo sao apresentadas as imagens do Copernicus Sentinel-2 utilizadas no calculo de 2026:", 0, 1)
+    pdf.ln(2)
+
+    for codigo, caminho_img in imagens_2026:
+        if os.path.exists(caminho_img):
+            pdf.set_font("Arial", "B", 8)
+            pdf.cell(0, 4, f"Periodo: {codigo}", 0, 1)
+            pdf.image(caminho_img, x=45, w=120)
+            pdf.ln(2)
+
+    # 3. Mapa Temático com Destaque para Focos de Macrófitas em 2026
     pdf.add_page()
     pdf.set_font("Arial", "B", 10)
-    pdf.cell(0, 6, "3. Serie Historica Consolidada (2023 - Setembro de 2026)", 0, 1)
+    pdf.cell(0, 6, "3. Mapa Tematico do Reservatorio e Focos de Macrofitas (2026)", 0, 1)
+    pdf.set_font("Arial", "", 8)
+    pdf.cell(0, 4, "Mapeamento espacial evidenciando o espelho d'agua e os pontos criticos de concentracao de macrofitas:", 0, 1)
+    pdf.ln(2)
+
+    mapa_path = os.path.join(output_dir, "mapa_macromas.png")
+    if os.path.exists(mapa_path):
+        pdf.image(mapa_path, x=35, w=140)
+    pdf.ln(4)
+    
+    # 4. Série Histórica Consolidada (2023 a 2026)
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 10)
+    pdf.cell(0, 6, "4. Serie Historica Consolidada (2023 - Setembro de 2026)", 0, 1)
+    pdf.ln(2)
     
     # Cabeçalho da Tabela
     pdf.set_fill_color(225, 225, 225)
