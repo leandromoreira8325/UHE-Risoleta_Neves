@@ -4,7 +4,7 @@ from fpdf import FPDF
 def gerar_relatorio_pdf(dados_serie, imagens_2026, output_dir, area_oficial_ha, mapa_path=None):
     """
     Gera o relatório executivo em PDF consolidando os dados de monitoramento
-    e embutindo o mapa geoespacial das macrófitas.
+    e embutindo o mapa geoespacial gerado na segunda página.
     """
     os.makedirs(output_dir, exist_ok=True)
     pdf_path = os.path.join(output_dir, "relatorio_monitoramento.pdf")
@@ -23,7 +23,7 @@ def gerar_relatorio_pdf(dados_serie, imagens_2026, output_dir, area_oficial_ha, 
     pdf.cell(0, 6, f"Area Oficial de Referencia do Reservatorio: {area_oficial_ha} ha", 0, 1, "L")
     pdf.ln(3)
     
-    # Tabela
+    # Cabeçalho da Tabela
     pdf.set_fill_color(220, 220, 220)
     pdf.set_font("Arial", "B", 9)
     pdf.cell(22, 7, "Periodo", 1, 0, "C", True)
@@ -42,7 +42,7 @@ def gerar_relatorio_pdf(dados_serie, imagens_2026, output_dir, area_oficial_ha, 
         
     pdf.ln(5)
     
-    # Cenas Orbitais
+    # Resumo das Cenas Catalogadas
     pdf.set_font("Arial", "B", 10)
     pdf.cell(0, 6, "Cenas Sentinel-2 Mapeadas no Periodo:", 0, 1, "L")
     pdf.set_font("Arial", "", 8)
@@ -58,7 +58,6 @@ def gerar_relatorio_pdf(dados_serie, imagens_2026, output_dir, area_oficial_ha, 
         pdf.set_font("Arial", "", 10)
         pdf.cell(0, 6, "Distribuicao espacial dos bancos de vegetacao aquatica identificados no reservatorio.", 0, 1, "C")
         pdf.ln(8)
-        # Insere a imagem do mapa gerada pelo matplotlib (largura 180mm)
         pdf.image(mapa_path, x=15, y=35, w=180)
         
     pdf.output(pdf_path)
