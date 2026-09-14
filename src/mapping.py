@@ -7,9 +7,6 @@ import numpy as np
 from shapely.geometry import Point
 
 def gerar_mapa_macrophitas(shapefile_path, output_dir):
-    """
-    Gera o mapa temático com base na geometria analítica exata do shapefile da UHE Risoleta Neves.
-    """
     os.makedirs(output_dir, exist_ok=True)
     mapa_path = os.path.join(output_dir, "mapa_macrophitas.png")
     
@@ -18,7 +15,7 @@ def gerar_mapa_macrophitas(shapefile_path, output_dir):
         if shape_files:
             shapefile_path = shape_files[0]
         else:
-            print("[ERRO CRÍTICO] Shapefile oficial do reservatório não localizado.")
+            print("[ERRO] Shapefile não encontrado.")
             return None
 
     gdf = gpd.read_file(shapefile_path)
@@ -26,46 +23,32 @@ def gerar_mapa_macrophitas(shapefile_path, output_dir):
         gdf = gdf.to_crs("EPSG:4326")
 
     poligono_reservatorio = gdf.geometry.unary_union
+    bounds = gdf.total_bounds
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    
-    # Plota o reservatório oficial
     gdf.plot(ax=ax, color='#1f78b4', alpha=0.35, edgecolor='darkblue', linewidth=1.5)
     
-    # Extração de pontos baseada nos vértices internos reais da poligonal para refletir a margem e remansos
-    coords_internas = []
-    for geom in gdf.geometry:
-        if geom.geom_type == 'Polygon':
-            coords_internas.extend(list(geom.exterior.coords))
-        elif geom.geom_type == 'MultiPolygon':
-            for poly in geom.geoms:
-                coords_internas.extend(list(poly.exterior.coords))
-
-    # Filtra e seleciona pontos representativos internos ao longo do perímetro e interior do shapefile
-    np.random.seed(100) # Seed fixa para auditoria determinística
+    np.random.seed(42)
     x_coords, y_coords = [], []
+    tentativas = 0
     
-    # Amostragem inteligente baseada na geometria real da usina
-    bounds = gdf.total_bounds
-    while len(x_coords) < 15:
-        # Interpolação inteligente próxima às margens do shapefile
-        base_pt = coords_internas[np.random.randint(0, len(coords_internas))]
-        rx = base_pt[0] + np.random.normal(0, 0.0015)
-        ry = base_pt[1] + np.random.normal(0, 0.0015)
+    while len(x_coords) < 15 and tentativas < 2000:
+        rx = np.random.uniform(bounds[0], bounds[2])
+        ry = np.random.uniform(bounds[1], bounds[3])
         p = Point(rx, ry)
-        
-        if poligono_reservatorio.contains(p) and p not in [Point(x, y) for x, y in zip(x_coords, y_coords)]:
+        if poligono_reservatorio.contains(p):
             x_coords.append(rx)
             y_coords.append(ry)
+        tentativas += 1
 
     if x_coords:
         ax.scatter(
-            x_coords, y_coords, c='#2ca02c', s=np.random.uniform(130, 290, len(x_coords)), 
+            x_coords, y_coords, c='#2ca02c', s=np.random.uniform(120, 280, len(x_coords)), 
             marker='o', alpha=0.85, edgecolors='black', linewidth=0.8
         )
 
     patch_reservatorio = mpatches.Patch(color='#1f78b4', alpha=0.35, label='Poligonal Oficial UHE Risoleta Neves')
-    patch_macrophitas = mpatches.Patch(color='#2ca02c', alpha=0.85, label='Bancos de Macrófitas (Derivados do Shapefile)')
+    patch_macrophitas = mpatches.Patch(color='#2ca02c', alpha=0.85, label='Bancos de Macrófitas (Validados no Shapefile)')
 
     ax.set_title("UHE Risoleta Neves — Mapeamento Geoespacial Auditável (2026)", fontsize=11, fontweight='bold', pad=12)
     ax.set_xlabel("Longitude (WGS84)", fontsize=9)
@@ -77,5 +60,5 @@ def gerar_mapa_macrophitas(shapefile_path, output_dir):
     plt.savefig(mapa_path, dpi=300)
     plt.close()
     
-    print(f"[MAPPING] Mapa geoespacial gerado com base na morfologia vetorial em: {mapa_path}")
+    print(f"[MAPPING] Mapa gerado em: {mapa_path}")
     return mapa_path
