@@ -1,6 +1,5 @@
 import os
 import requests
-from shapely.geometry import box
 
 class CopernicusAPI:
     def __init__(self):
@@ -11,7 +10,7 @@ class CopernicusAPI:
 
     def obter_token(self):
         if not self.client_id or not self.client_secret:
-            print("[COPERNICUS API] Credenciais não detectadas no ambiente. Utilizando modo simulado.")
+            print("[COPERNICUS API] Credenciais não detectadas.")
             return None
 
         payload = {
@@ -24,25 +23,20 @@ class CopernicusAPI:
             response = requests.post(self.token_url, data=payload, timeout=30)
             if response.status_code == 200:
                 return response.json().get("access_token")
-            else:
-                print(f"[AVISO] Falha na autenticação Copernicus: {response.status_code} - {response.text}")
-                return None
         except Exception as e:
-            print(f"[ERRO] Erro ao conectar com o servidor Copernicus: {e}")
-            return None
+            print(f"[ERRO] Falha ao obter token: {e}")
+        return None
 
     def buscar_dados_completos(self, token, bbox, dt_inicio, dt_fim, max_cloud=35):
         """
-        Busca cenas Sentinel-2 reais utilizando o catálogo OData do Copernicus Data Space.
+        Busca a cena Sentinel-2 real, obtém a data e os metadados de acesso para download raster.
         """
         if not token:
             return None, None
 
         minx, miny, maxx, maxy = bbox
-        # Monta o filtro espacial (polygon WKT) e temporal para o Sentinel-2
         wkt_box = f"POLYGON(({minx} {miny}, {maxx} {miny}, {maxx} {maxy}, {minx} {maxy}, {minx} {miny}))"
         
-        # Filtro OData para Sentinel-2 L2A (correção atmosférica) com baixa cobertura de nuvens
         filter_query = (
             f"Collection/Name eq 'SENTINEL-2' and "
             f"Attributes/OData.CSC.StringAttribute/any(s:s/Name eq 'processingLevel' and s/OData.CSC.StringAttribute/Value eq 'S2MSI2A') and "
@@ -57,9 +51,7 @@ class CopernicusAPI:
             "$orderby": "ContentDate/Start desc"
         }
 
-        headers = {
-            "Authorization": f"Bearer {token}"
-        }
+        headers = {"Authorization": f"Bearer {token}"}
 
         try:
             response = requests.get(self.odata_url, headers=headers, params=params, timeout=30)
@@ -67,14 +59,13 @@ class CopernicusAPI:
                 data = response.json().get("value", [])
                 if data:
                     produto = data[0]
+                    product_id = produto.get("Id")
                     data_aquisicao = produto.get("ContentDate", {}).get("Start", "")[:10]
-                    print(f"[COPERNICUS API] Cena encontrada para o período: {data_aquisicao}")
-                    # Retorna os metadados da cena encontrada (o processamento raster fará o download se necessário)
-                    # Caso queira processar bandas reais, o ID do produto pode ser usado na API de Download.
-                    return None, data_aquisicao  # Se retornar None no binário, o pipeline usa a geometria com a data real obtida.
-            else:
-                print(f"[AVISO] Consulta OData retornou status {response.status_code}")
+                    print(f"[COPERNICUS API] Cena real encontrada (ID: {product_id}) para {data_aquisicao}")
+                    
+                    # Retornamos o product_id para que o processamento saiba qual cena baixar
+                    return product_id, data_aquisicao
         except Exception as e:
-            print(f"[ERRO] Falha na consulta de produtos Copernicus: {e}")
+            print(f"[ERRO] Falha na consulta OData: {e}")
 
         return None, None
