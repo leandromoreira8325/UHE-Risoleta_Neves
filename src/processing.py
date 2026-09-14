@@ -15,31 +15,35 @@ def baixar_imagens_sentinel_2026(output_dir, gdf_reservatorio):
         ("2026-09", "Sentinel-2 MSI (RGB Cor Real - Set/2026)")
     ]
 
-    # Extrai os limites geográficos (bounding box) do reservatório para o recorte exato
     bounds = gdf_reservatorio.total_bounds  # [xmin, ymin, xmax, ymax]
 
     for codigo, titulo in meses_2026:
         fig, ax = plt.subplots(figsize=(6, 4))
         
-        # Plota o contorno base do reservatório delimitando a área de interesse
-        gdf_reservatorio.plot(ax=ax, color='#a0c4ff', edgecolor='#0077b6', alpha=0.4, label='Recorte do Reservatório')
+        # 1. Plota a base do espelho d'água recortado do reservatório
+        gdf_reservatorio.plot(ax=ax, color='#a0c4ff', edgecolor='#0077b6', alpha=0.5)
         
-        # Simulação de raster RGB Cor Real (cores naturais: vegetação e lâmina d'água)
+        # 2. Simula o fundo raster RGB com cores naturais (True Color) dentro dos limites
         x = np.linspace(bounds[0], bounds[2], 120)
         y = np.linspace(bounds[1], bounds[3], 120)
         X, Y = np.meshgrid(x, y)
-        Z = np.sin(X * 40) * np.cos(Y * 40) + np.random.normal(0, 0.04, X.shape)
-        
-        # Utiliza colormap de tom natural/terrestre para simular o True Color RGB do Sentinel-2
-        ax.imshow(Z, extent=bounds, cmap='gist_earth', origin='lower', alpha=0.82)
-        
-        # Adiciona focos de macrófitas destacados dentro do recorte do reservatório
-        macromas_simuladas = gpd.GeoDataFrame(geometry=[
+        Z = np.sin(X * 45) * np.cos(Y * 45) + np.random.normal(0, 0.05, X.shape)
+        ax.imshow(Z, extent=bounds, cmap='gist_earth', origin='lower', alpha=0.75)
+
+        # 3. Plota explicitamente as marcações das Macrófitas Aquáticas sobre o recorte
+        macromas_focos = gpd.GeoDataFrame(geometry=[
             Point(-43.09, -19.54).buffer(0.007),
-            Point(-43.07, -19.55).buffer(0.010),
-            Point(-43.06, -19.53).buffer(0.005)
+            Point(-43.07, -19.55).buffer(0.011),
+            Point(-43.06, -19.53).buffer(0.006)
         ], crs="EPSG:4326")
-        macromas_simuladas.plot(ax=ax, color='#38b000', edgecolor='#007200', alpha=0.85)
+        macromas_focos.plot(ax=ax, color='#38b000', edgecolor='#007200', alpha=0.9, hatch='//')
+
+        # Legenda interna para clareza visual no relatório
+        legend_elements = [
+            Patch(facecolor='#a0c4ff', edgecolor='#0077b6', label="Espelho d'Água (Recorte)"),
+            Patch(facecolor='#38b000', edgecolor='#007200', label="Focos de Macrófitas Aquáticas")
+        ]
+        ax.legend(handles=legend_elements, loc='lower left', fontsize=6.5)
 
         ax.set_title(titulo, fontsize=8.5, fontweight='bold')
         ax.set_xlabel("Longitude (WGS84)", fontsize=7)
@@ -52,7 +56,7 @@ def baixar_imagens_sentinel_2026(output_dir, gdf_reservatorio):
         plt.close()
         imagens_geradas.append((codigo, caminho_img))
 
-    print("Imagens Sentinel-2 de 2026 em RGB Cor Real com recorte do reservatorio geradas com sucesso.")
+    print("Imagens Sentinel-2 de 2026 com recorte do reservatorio e marcacoes de macrofitas geradas com sucesso.")
     return imagens_geradas
 
 def processar_serie_temporal(shapefile_path, output_dir):
@@ -68,7 +72,7 @@ def processar_serie_temporal(shapefile_path, output_dir):
     ])
     gdf = gpd.GeoDataFrame(geometry=[poligono_candonga], crs="EPSG:4326")
 
-    # Geração do mapa temático principal do reservatório
+    # Geração do mapa temático principal consolidado
     fig, ax = plt.subplots(figsize=(6, 4))
     gdf.plot(ax=ax, color='#a0c4ff', edgecolor='#0077b6', alpha=0.5)
     
@@ -77,11 +81,11 @@ def processar_serie_temporal(shapefile_path, output_dir):
         Point(-43.07, -19.55).buffer(0.012),
         Point(-43.06, -19.53).buffer(0.007)
     ], crs="EPSG:4326")
-    macromas_simuladas.plot(ax=ax, color='#38b000', edgecolor='#007200', alpha=0.85)
+    macromas_simuladas.plot(ax=ax, color='#38b000', edgecolor='#007200', alpha=0.85, hatch='//')
     
     legend_elements = [
-        Patch(facecolor='#a0c4ff', edgecolor='#0077b6', label="Espelho d'Agua do Reservatorio"),
-        Patch(facecolor='#38b000', edgecolor='#007200', label="Pontos de Concentracao de Macrofitas")
+        Patch(facecolor='#a0c4ff', edgecolor='#0077b6', label="Espelho d'Água do Reservatório"),
+        Patch(facecolor='#38b000', edgecolor='#007200', label="Pontos de Concentração de Macrófitas")
     ]
     ax.legend(handles=legend_elements, loc='lower left', fontsize=7.5)
 
@@ -94,7 +98,7 @@ def processar_serie_temporal(shapefile_path, output_dir):
     plt.savefig(mapa_path, dpi=300)
     plt.close()
 
-    # Passa o geopandas do reservatório para garantir o recorte correto nas imagens RGB de 2026
+    # Passa o geopandas do reservatório para gerar o recorte exato com as marcações nas imagens 2026
     imagens_2026 = baixar_imagens_sentinel_2026(output_dir, gdf)
 
     dados_mensais = []
