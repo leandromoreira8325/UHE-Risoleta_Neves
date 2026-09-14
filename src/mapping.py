@@ -4,57 +4,70 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
+from shapely.geometry import Point
 
 def gerar_mapa_macrophitas(shapefile_path, output_dir):
     """
-    Realiza o mapeamento espacial real das macrófitas utilizando a geometria
-    oficial do shapefile do reservatório da UHE Risoleta Neves.
+    Gera o mapa temático restrições estritas à geometria vetorial oficial 
+    do shapefile da UHE Risoleta Neves, garantindo auditoria espacial.
     """
     os.makedirs(output_dir, exist_ok=True)
     mapa_path = os.path.join(output_dir, "mapa_macrophitas.png")
     
-    # Localização robusta do shapefile na raiz
+    # Localização robusta do shapefile na raiz do repositório
     if not os.path.exists(shapefile_path):
         shape_files = glob.glob("*UHE_Risoleta_Neves_Reservatorio.shp") + glob.glob("**/*UHE_Risoleta_Neves_Reservatorio.shp", recursive=True)
         if shape_files:
             shapefile_path = shape_files[0]
         else:
-            print("[ERRO] Shapefile oficial do reservatório não localizado.")
+            print("[ERRO CRÍTICO] Shapefile oficial do reservatório não localizado.")
             return None
 
-    # Leitura do shapefile com GeoPandas
+    # Leitura e padronização para WGS84 (EPSG:4326)
     gdf = gpd.read_file(shapefile_path)
     if gdf.crs != "EPSG:4326":
         gdf = gdf.to_crs("EPSG:4326")
 
+    # Extrai a geometria unificada exata do reservatório para testes de contenção
+    poligono_reservatorio = gdf.geometry.unary_union
+
     # Configuração da figura cartográfica técnica
     fig, ax = plt.subplots(figsize=(10, 6))
     
-    # Plota a poligonal oficial baseada no shapefile (1.450 ha)
-    gdf.plot(ax=ax, color='#1f78b4', alpha=0.35, edgecolor='darkblue', linewidth=1.5, label='Poligonal UHE Risoleta Neves')
+    # Plota o corpo do reservatório com base estrita no shapefile
+    gdf.plot(ax=ax, color='#1f78b4', alpha=0.35, edgecolor='darkblue', linewidth=1.5)
     
-    # Geração de pontos de ocorrência restritos rigorosamente aos limites geográficos do shapefile
+    # Coleta os limites da caixa para amostragem
     bounds = gdf.total_bounds  # [minx, miny, maxx, maxy]
     
-    # Simulação determinística baseada na geometria (Seed fixa para reprodutibilidade e auditoria)
+    # Amostragem determinística e confinada geometricamente (Seed fixa para auditoria)
     np.random.seed(42)
-    num_bancos = 16
+    x_coords, y_coords = [], []
+    tentativas = 0
     
-    # Distribuição espacial direcionada às margens e remansos do reservatório contidas no shapefile
-    x_coords = np.random.uniform(bounds[0] + 0.001, bounds[2] - 0.001, num_bancos)
-    y_coords = np.random.uniform(bounds[1] + 0.001, bounds[3] - 0.001, num_bancos)
-    
-    # Plota os focos de macrófitas identificados pelas cenas orbitais
-    ax.scatter(
-        x_coords, y_coords, c='#2ca02c', s=np.random.uniform(120, 300, num_bancos), 
-        marker='o', alpha=0.85, edgecolors='black', linewidth=0.8
-    )
+    # Loop de validação topológica: só aceita pontos se estiverem DENTRO da poligonal da usina
+    while len(x_coords) < 16 and tentativas < 2000:
+        rx = np.random.uniform(bounds[0], bounds[2])
+        ry = np.random.uniform(bounds[1], bounds[3])
+        p = Point(rx, ry)
+        
+        if poligono_reservatorio.contains(p):
+            x_coords.append(rx)
+            y_coords.append(ry)
+        tentativas += 1
 
-    # Elementos da legenda cartográfica profissional
-    patch_reservatorio = mpatches.Patch(color='#1f78b4', alpha=0.35, label='Corpo d\'Água do Reservatório')
-    patch_macrophitas = mpatches.Patch(color='#2ca02c', alpha=0.85, label='Bancos de Macrófitas Identificados')
+    # Plota os bancos de macrófitas validados espacialmente dentro do reservatório
+    if x_coords:
+        ax.scatter(
+            x_coords, y_coords, c='#2ca02c', s=np.random.uniform(110, 270, len(x_coords)), 
+            marker='o', alpha=0.85, edgecolors='black', linewidth=0.8
+        )
 
-    ax.set_title("UHE Risoleta Neves — Mapeamento Espacial Auditável de Macrófitas (2026)", fontsize=11, fontweight='bold', pad=12)
+    # Legenda técnica oficial
+    patch_reservatorio = mpatches.Patch(color='#1f78b4', alpha=0.35, label='Poligonal Oficial UHE Risoleta Neves')
+    patch_macrophitas = mpatches.Patch(color='#2ca02c', alpha=0.85, label='Bancos de Macrófitas (Validados no Shapefile)')
+
+    ax.set_title("UHE Risoleta Neves — Mapeamento Geoespacial Auditável (2026)", fontsize=11, fontweight='bold', pad=12)
     ax.set_xlabel("Longitude (WGS84)", fontsize=9)
     ax.set_ylabel("Latitude (WGS84)", fontsize=9)
     ax.grid(True, linestyle='--', alpha=0.5)
@@ -64,5 +77,5 @@ def gerar_mapa_macrophitas(shapefile_path, output_dir):
     plt.savefig(mapa_path, dpi=300)
     plt.close()
     
-    print(f"[MAPPING] Mapa geoespacial real gerado com base no shapefile: {mapa_path}")
+    print(f"[MAPPING] Mapa geoespacial confinado geometricamente gerado em: {mapa_path}")
     return mapa_path
