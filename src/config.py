@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
 
-# Raiz do repositório (um nível acima da pasta src)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Localiza a raiz do repositório (um nível acima de src/)
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 AREA_OFICIAL_HA = 1450.0
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+# Caminho absoluto para o Shapefile na raiz
 SHAPEFILE_PATH = os.path.join(BASE_DIR, "UHE_Risoleta_Neves_Reservatorio.shp")
