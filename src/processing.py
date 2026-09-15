@@ -1,11 +1,11 @@
-import glob
-from config import SHAPEFILE_NAME
+import os
+from src.config import SHAPEFILE_PATH
 
 def processar_dados_2026():
     print("[PROCESSING] Processando dados acumulados de 2026...")
     
-    shape_files = glob.glob(f"*{SHAPEFILE_NAME}") + glob.glob(f"**/*{SHAPEFILE_NAME}", recursive=True) + glob.glob("*.shp") + glob.glob("**/*.shp", recursive=True)
-    shapefile_path = shape_files[0] if shape_files else SHAPEFILE_NAME
+    if not os.path.exists(SHAPEFILE_PATH):
+        raise FileNotFoundError(f"[ERRO] O arquivo {SHAPEFILE_PATH} não foi encontrado na raiz do repositório.")
 
     meses_2026 = [
         ("Jan/2026", 92.80, 6.40),
@@ -28,4 +28,4 @@ def processar_dados_2026():
             "status": "Validado (Cena Sentinel-2 Real)"
         })
 
-    return dados_serie, shapefile_path
+    return dados_serie, SHAPEFILE_PATH
