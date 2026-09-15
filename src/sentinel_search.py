@@ -1,34 +1,60 @@
 """
 sentinel_search.py
 
-Busca de cenas Sentinel-2 utilizando
-o catálogo STAC do Copernicus Data Space.
-
-Projeto:
-Monitoramento de Macrófitas
-UHE Risoleta Neves
+Busca de cenas Sentinel-2
+Copernicus Data Space Ecosystem
 """
 
-from pystac_client import Client
+from __future__ import annotations
 
-CATALOGO_STAC = (
-    "https://catalogue.dataspace.copernicus.eu/stac"
-)
+import geopandas as gpd
+
+from src.config import SHAPEFILE_PATH
 
 
-def listar_colecoes():
+def obter_bbox():
 
-    catalog = Client.open(CATALOGO_STAC)
+    gdf = gpd.read_file(SHAPEFILE_PATH)
 
-    print("\nCOLEÇÕES DISPONÍVEIS\n")
-
-    for collection in catalog.get_collections():
-
-        print(
-            collection.id
+    if gdf.crs is None:
+        raise ValueError(
+            "Shapefile sem CRS definido."
         )
+
+    if gdf.crs.to_epsg() != 4326:
+        gdf = gdf.to_crs(epsg=4326)
+
+    minx, miny, maxx, maxy = gdf.total_bounds
+
+    return {
+        "xmin": float(minx),
+        "ymin": float(miny),
+        "xmax": float(maxx),
+        "ymax": float(maxy)
+    }
+
+
+def buscar_melhor_cena():
+    """
+    Função temporária para manter o pipeline funcionando.
+    """
+
+    bbox = obter_bbox()
+
+    print(
+        f"[SENTINEL] BBOX: {bbox}"
+    )
+
+    return {
+        "id": "TEMPORARIO",
+        "data": "2026-09-15",
+        "nuvens": 0.0,
+        "bbox": bbox
+    }
 
 
 if __name__ == "__main__":
 
-    listar_colecoes()
+    cena = buscar_melhor_cena()
+
+    print(cena)
