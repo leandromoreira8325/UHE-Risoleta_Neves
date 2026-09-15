@@ -1,20 +1,35 @@
-import os
 from src.config import OUTPUT_DIR
 from src.processing import processar_dados_2026
 from src.mapping import gerar_mapa_macrophitas
 from src.report import gerar_relatorio_pdf
 
+
+def main():
+
+    print(
+        "=== UHE Risoleta Neves ==="
+    )
+
+    dados_serie, shp = processar_dados_2026()
+
+    ultimo = dados_serie[-1]
+
+    mapa = gerar_mapa_macrophitas(
+        shp,
+        ultimo,
+        OUTPUT_DIR
+    )
+
+    gerar_relatorio_pdf(
+        dados_serie,
+        mapa,
+        OUTPUT_DIR
+    )
+
+    print(
+        "=== Pipeline finalizado ==="
+    )
+
+
 if __name__ == "__main__":
-    print("=== Pipeline de Monitoramento Patrimonial: UHE Risoleta Neves ===")
-    
-    # 1. Processamento dos dados da série temporal 2026
-    dados_serie, shapefile_path = processar_dados_2026()
-    ultimo_dado = dados_serie[-1]
-    
-    # 2. Geração da prancha cartográfica auditável
-    mapa_path = gerar_mapa_macrophitas(shapefile_path, ultimo_dado, OUTPUT_DIR)
-    
-    # 3. Geração do relatório PDF consolidado
-    gerar_relatorio_pdf(dados_serie, mapa_path, OUTPUT_DIR)
-    
-    print("=== Pipeline concluído com sucesso! ===")
+    main()
