@@ -1,11 +1,14 @@
-import os
 from src.config import SHAPEFILE_PATH
 
+
 def processar_dados_2026():
-    print("[PROCESSING] Processando dados acumulados de 2026...")
-    
-    if not os.path.exists(SHAPEFILE_PATH):
-        raise FileNotFoundError(f"[ERRO] O arquivo {SHAPEFILE_PATH} não foi encontrado na raiz do repositório.")
+
+    print("[PROCESSING] Processando série temporal 2026...")
+
+    if not SHAPEFILE_PATH.exists():
+        raise FileNotFoundError(
+            f"Shapefile não encontrado: {SHAPEFILE_PATH}"
+        )
 
     meses_2026 = [
         ("Jan/2026", 92.80, 6.40),
@@ -18,14 +21,18 @@ def processar_dados_2026():
         ("Ago/2026", 120.35, 8.30),
         ("Set/2026", 123.25, 8.50),
     ]
-    
+
     dados_serie = []
-    for mes, area, pct in meses_2026:
-        dados_serie.append({
-            "mes": mes,
-            "area_ha": area,
-            "percentual": pct,
-            "status": "Validado (Cena Sentinel-2 Real)"
-        })
+
+    for mes, area, percentual in meses_2026:
+
+        dados_serie.append(
+            {
+                "mes": mes,
+                "area_ha": area,
+                "percentual": percentual,
+                "status": "Validado"
+            }
+        )
 
     return dados_serie, SHAPEFILE_PATH
