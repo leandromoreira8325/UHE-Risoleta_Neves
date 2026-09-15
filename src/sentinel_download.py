@@ -1,25 +1,22 @@
 """
 sentinel_download.py
 
-Download de produtos Sentinel-2.
-
-Versão inicial para integração
-com Copernicus Data Space.
+Download de produtos Sentinel-2
+Copernicus Data Space Ecosystem.
 """
 
 from pathlib import Path
+
 import requests
 
 from src.config import DATA_DIR
-from src.copernicus_api import (
-    CopernicusDataSpaceAPI
-)
+from src.copernicus_api import CopernicusDataSpaceAPI
 
 
 def baixar_produto(
     product_id: str,
     nome_produto: str
-):
+) -> Path:
 
     api = CopernicusDataSpaceAPI()
 
@@ -43,8 +40,13 @@ def baixar_produto(
 
     headers = {
         "Authorization":
-            f"Bearer {token}"
+        f"Bearer {token}"
     }
+
+    print(
+        f"[DOWNLOAD] Iniciando download: "
+        f"{nome_produto}"
+    )
 
     response = requests.get(
         url,
@@ -69,7 +71,23 @@ def baixar_produto(
                 arquivo.write(chunk)
 
     print(
-        f"[DOWNLOAD] {destino}"
+        f"[DOWNLOAD] Arquivo salvo:"
     )
 
+    print(destino)
+
+    print(
+        "\n[DOWNLOAD] Conteúdo atual da pasta data:\n"
+    )
+
+    for arquivo in DATA_DIR.iterdir():
+
+        print(arquivo)
+
     return destino
+
+
+if __name__ == "__main__":
+
+    print(
+        "Módulo de 
