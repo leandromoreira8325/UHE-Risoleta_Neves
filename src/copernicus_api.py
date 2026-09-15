@@ -1,10 +1,14 @@
 """
 copernicus_api.py
 
-Módulo de autenticação para o Copernicus Data Space Ecosystem (CDSE).
+Cliente para autenticação no Copernicus Data Space Ecosystem (CDSE).
 
-Autor: Leandro Alves Moreira
-Projeto: UHE Risoleta Neves - Monitoramento de Macrófitas
+Projeto:
+Monitoramento de Macrófitas Aquáticas
+UHE Risoleta Neves
+
+Autor:
+Leandro Alves Moreira
 """
 
 from __future__ import annotations
@@ -17,9 +21,9 @@ import requests
 
 class CopernicusDataSpaceAPI:
     """
-    Cliente básico de autenticação do Copernicus Data Space Ecosystem.
+    Cliente de autenticação do Copernicus Data Space Ecosystem.
 
-    Variáveis de ambiente esperadas:
+    Variáveis de ambiente necessárias:
 
     COPERNICUS_CLIENT_ID
     COPERNICUS_CLIENT_SECRET
@@ -31,23 +35,42 @@ class CopernicusDataSpaceAPI:
     )
 
     def __init__(self) -> None:
-        self.client_id = os.getenv("COPERNICUS_CLIENT_ID")
-        self.client_secret = os.getenv("COPERNICUS_CLIENT_SECRET")
 
-    def obter_token(self) -> Optional[str]:
+        self.client_id = os.getenv(
+            "COPERNICUS_CLIENT_ID"
+        )
+
+        self.client_secret = os.getenv(
+            "COPERNICUS_CLIENT_SECRET"
+        )
+
+    def credenciais_configuradas(self) -> bool:
         """
-        Obtém token OAuth2 do Copernicus.
+        Verifica se as credenciais foram informadas.
+        """
+
+        return bool(
+            self.client_id and self.client_secret
+        )
+
+    def obter_token(self) -> Optional[str]       Realiza autenticação OAuth2.
 
         Returns
         -------
         Optional[str]
-            Token de acesso ou None em caso de falha.
+
+            Access token válido ou None.
         """
 
-        if not self.client_id or not self.client_secret:
+        if not self.credenciais_configuradas():
 
             print(
-                "[denciais não configuradas. "
+                "[COPERNICUS] "
+                "Credenciais não encontradas."
+            )
+
+            print(
+                "[COPERNICUS] "
                 "Modo de simulação ativado."
             )
 
@@ -61,6 +84,11 @@ class CopernicusDataSpaceAPI:
 
         try:
 
+            print(
+                "[COPERNICUS] "
+                "Solicitando token..."
+            )
+
             response = requests.post(
                 self.TOKEN_URL,
                 data=payload,
@@ -69,18 +97,22 @@ class CopernicusDataSpaceAPI:
 
             response.raise_for_status()
 
-            token = response.json().get("access_token")
+            token = response.json().get(
+                "access_token"
+            )
 
             if token:
 
                 print(
-                    "[COPERNICUS] Token obtido com sucesso."
+                    "[COPERNICUS] "
+                    "Token obtido com sucesso."
                 )
 
                 return token
 
             print(
-                "[COPERNICUS] Resposta recebida sem access_token."
+                "[COPERNICUS] "
+                "Token não encontrado na resposta."
             )
 
             return None
@@ -88,19 +120,15 @@ class CopernicusDataSpaceAPI:
         except requests.exceptions.RequestException as exc:
 
             print(
-                f"[COPERNICUS ERRO] Falha na autenticação: {exc}"
+                "[COPERNICUS ERRO] "
+                f"{exc}"
             )
 
             return None
 
-    def validar_conexao(self) -> bool:
+    def validar_autenticacao(self) -> bool:
         """
-        Verifica se as credenciais são válidas.
-
-        Returns
-        -------
-        bool
-            True se a autenticação foi bem-sucedida.
+        Testa se o token pode ser obtido.
         """
 
         token = self.obter_token()
@@ -108,18 +136,25 @@ class CopernicusDataSpaceAPI:
         return token is not None
 
 
-if __name__ == "__main__":
+def testar_conexao() -> None:
 
-    api = CopernicusDataSpaceAPI()
+    cliente = CopernicusDataSpaceAPI()
 
-    if api.validar_conexao():
+    if cliente.validar_autenticacao():
 
         print(
-            "[TESTE] Conexão com Copernicus realizada com sucesso."
+            "[TESTE] "
+            "Autenticação realizada com sucesso."
         )
 
     else:
 
         print(
-            "[TESTE] Não foi possível autenticar no Copernicus."
+            "[TESTE] "
+            "Autenticação indisponível."
         )
+
+
+if __name__ == "__main__":
+
+    testar_conexao()
