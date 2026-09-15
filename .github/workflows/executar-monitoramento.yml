@@ -1,12 +1,9 @@
-nname: Monitoramento UHE Risoleta Neves
+name: Monitoramento UHE Risoleta Neves
 
 on:
   push:
     branches: [ "main", "master" ]
   workflow_dispatch:
-  # Opcional: Execução agendada (ex: toda segunda-feira às 06:00 UTC)
-  # schedule:
-  #   - cron: '0 6 * * 1'
 
 jobs:
   build:
@@ -25,11 +22,7 @@ jobs:
       - name: Instalar Dependências
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then 
-            pip install -r requirements.txt; 
-          else 
-            pip install geopandas matplotlib shapely reportlab numpy requests rasterio; 
-          fi
+          pip install -r requirements.txt
 
       - name: Garantir Diretório de Saída
         run: mkdir -p outputs
