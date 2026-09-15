@@ -3,8 +3,6 @@ macrophyte_detection.py
 
 Detecção de macrófitas utilizando
 NDVI + Máscara de Água.
-
-UHE Risoleta Neves
 """
 
 import numpy as np
@@ -18,13 +16,6 @@ def calcular_ndvi(
     banda_nir: str,
     output_ndvi: str
 ) -> str:
-    """
-    NDVI = (NIR - RED) / (NIR + RED)
-
-    Sentinel-2:
-    B4 = Red
-    B8 = NIR
-    """
 
     with rasterio.open(banda_red) as red_src:
 
@@ -38,11 +29,7 @@ def calcular_ndvi(
 
     np.seterr(divide="ignore")
 
-    ndvi = (
-        (nir - red)
-        /
-        (nir + red)
-    )
+    ndvi = (nir - red) / (nir + red)
 
     ndvi = np.where(
         np.isnan(ndvi),
@@ -52,8 +39,7 @@ def calcular_ndvi(
 
     profile.update(
         dtype=rasterio.float32,
-        nodata=-9999,
-        compress="lzw"
+        nodata=-9999
     )
 
     with rasterio.open(
@@ -69,10 +55,6 @@ def calcular_ndvi(
             1
         )
 
-    print(
-        f"[NDVI] Gerado: {output_ndvi}"
-    )
-
     return output_ndvi
 
 
@@ -81,7 +63,45 @@ def detectar_macrofitas(
     water_mask_path: str,
     output_raster: str
 ) -> str:
-    """
-    Detecta macrófitas:
 
-  
+    with rasterio.open(
+        ndvi_path
+    ) as ndvi_src:
+
+        ndvi = ndvi_src.read(1)
+
+        profile = ndvi_src.profile.copy()
+
+    with rasterio.open(
+        water_mask_path
+    ) as water_src:
+
+        water_mask = water_src.read(1)
+
+    macrofitas = np.where(
+        (water_mask == 1)
+        &
+        (ndvi > NDVI_THRESHOLD),
+        1,
+        0
+    )
+
+    profile.update(
+        dtype=rasterio.uint8,
+        nodata=0
+    )
+
+    with rasterio.open(
+        output_raster,
+        "w",
+        **profile
+    ) as dst:
+
+        dst.write(
+            macrofitas.astype(
+                rasterio.uint8
+            ),
+            1
+        )
+
+    return output_raster
