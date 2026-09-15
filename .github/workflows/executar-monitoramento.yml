@@ -33,7 +33,7 @@ jobs:
 
       - name: Executar Pipeline Principal
         env:
-          PYTHONPATH: .
+          PYTHONPATH: src
         run: python main.py
 
       - name: Salvar Artefatos do Relatório
