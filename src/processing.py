@@ -1,38 +1,64 @@
+"""
+processing.py
+
+Orquestra o fluxo principal de processamento.
+
+Versão preparada para futura integração
+com Sentinel-2 e Copernicus Data Space.
+"""
+
+from pathlib import Path
+
 from src.config import SHAPEFILE_PATH
+from src.sentinel_search import obter_bbox
 
 
 def processar_dados_2026():
+    """
+    Fluxo principal de processamento.
 
-    print("[PROCESSING] Processando série temporal 2026...")
+    Retorna:
+        dados_serie
+        shapefile_path
+    """
+
+    print(
+        "[PROCESSING] Iniciando processamento..."
+    )
 
     if not SHAPEFILE_PATH.exists():
+
         raise FileNotFoundError(
-            f"Shapefile não encontrado: {SHAPEFILE_PATH}"
+            f"Shapefile não encontrado: "
+            f"{SHAPEFILE_PATH}"
         )
 
-    meses_2026 = [
-        ("Jan/2026", 92.80, 6.40),
-        ("Fev/2026", 114.55, 7.90),
-        ("Mar/2026", 89.90, 6.20),
-        ("Abr/2026", 76.85, 5.30),
-        ("Mai/2026", 98.60, 6.80),
-        ("Jun/2026", 94.25, 6.50),
-        ("Jul/2026", 117.45, 8.10),
-        ("Ago/2026", 120.35, 8.30),
-        ("Set/2026", 123.25, 8.50),
+    bbox = obter_bbox()
+
+    print(
+        f"[PROCESSING] BBOX encontrado: "
+        f"{bbox}"
+    )
+
+    # ==================================================
+    # TEMPORÁRIO
+    # Até a implementação do download Sentinel-2
+    # ==================================================
+
+    dados_serie = [
+        {
+            "mes": "Set/2026",
+            "area_ha": 123.25,
+            "percentual": 8.50,
+            "status": "Processamento Preparado para Sentinel-2"
+        }
     ]
 
-    dados_serie = []
+    print(
+        "[PROCESSING] Processamento concluído."
+    )
 
-    for mes, area, percentual in meses_2026:
-
-        dados_serie.append(
-            {
-                "mes": mes,
-                "area_ha": area,
-                "percentual": percentual,
-                "status": "Validado"
-            }
-        )
-
-    return dados_serie, SHAPEFILE_PATH
+    return (
+        dados_serie,
+        str(SHAPEFILE_PATH)
+    )
