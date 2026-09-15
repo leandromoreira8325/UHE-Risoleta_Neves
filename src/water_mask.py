@@ -164,4 +164,3 @@ if __name__ == "__main__":
     print(
         "Módulo de NDWI carregado."
     )
-``
