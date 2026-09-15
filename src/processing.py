@@ -36,4 +36,3 @@ def processar_dados_2026():
         dados_serie,
         str(SHAPEFILE_PATH)
     )
-``
