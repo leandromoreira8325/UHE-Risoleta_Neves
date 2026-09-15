@@ -3,7 +3,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from config import AREA_OFICIAL_HA
+from src.config import AREA_OFICIAL_HA
 
 def gerar_relatorio_pdf(dados_serie, mapa_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
@@ -95,7 +95,7 @@ def gerar_relatorio_pdf(dados_serie, mapa_path, output_dir):
     story.append(Paragraph(texto_conc, body_style))
     story.append(Spacer(1, 8))
     
-    # Seção 4: Mapeamento (Separada explicitamente)
+    # Seção 4: Mapeamento Geoespacial (Isolado)
     story.append(Paragraph("4. Mapeamento Geoespacial Auditável", h2_style))
     story.append(Paragraph("Distribuição espacial dos bancos de vegetação aquática identificados e mascarados pelo shapefile oficial:", body_style))
     story.append(Spacer(1, 6))
