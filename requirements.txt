@@ -1,7 +1,9 @@
-geopandas
-matplotlib
-shapely
-reportlab
-numpy
-requests
-rasterio
+geopandas==0.14.4
+shapely==2.0.6
+pyproj==3.6.1
+fiona==1.9.6
+
+numpy==1.26.4
+matplotlib==3.8.4
+
+reportlab==4.2.2
