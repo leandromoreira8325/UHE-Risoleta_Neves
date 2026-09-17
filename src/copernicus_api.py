@@ -30,7 +30,7 @@ class CopernicusDataSpaceAPI:
         ):
 
             raise RuntimeError(
-                "Credenciais não encontradas."
+                "Credenciais Copernicus não encontradas."
             )
 
         payload = {
@@ -67,5 +67,5 @@ if __name__ == "__main__":
     token = api.obter_token()
 
     print(
-        f"TOKEN OK: {token[:30]}..."
+        f"TOKEN OK: {token[:50]}..."
     )
