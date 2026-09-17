@@ -29,11 +29,9 @@ class CopernicusDataSpaceAPI:
             not self.client_secret
         ):
 
-            print(
-                "[COPERNICUS] Credenciais ausentes."
+            raise RuntimeError(
+                "Credenciais não encontradas."
             )
-
-            return None
 
         payload = {
             "client_id": self.client_id,
@@ -53,8 +51,21 @@ class CopernicusDataSpaceAPI:
             "access_token"
         )
 
-        print(
-            f"[COPERNICUS] Token obtido: {token[:30]}..."
-        )
+        if token is None:
+
+            raise RuntimeError(
+                "Token não retornado."
+            )
 
         return token
+
+
+if __name__ == "__main__":
+
+    api = CopernicusDataSpaceAPI()
+
+    token = api.obter_token()
+
+    print(
+        f"TOKEN OK: {token[:30]}..."
+    )
