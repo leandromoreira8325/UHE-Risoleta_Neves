@@ -2,6 +2,7 @@
 processing.py
 
 Fluxo principal de processamento.
+
 Versão estável preparada para integração
 com Sentinel-2.
 """
