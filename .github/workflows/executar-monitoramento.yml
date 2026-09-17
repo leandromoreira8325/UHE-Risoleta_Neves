@@ -1,7 +1,6 @@
 name: Monitoramento UHE Risoleta Neves
 
 on:
-
   workflow_dispatch:
 
   push:
@@ -36,11 +35,22 @@ jobs:
           ls -la
           ls -la src
 
+      - name: Testar Copernicus
+        env:
+          COPERNICUS_CLIENT_ID: ${{ secrets.COPERNICUS_CLIENT_ID }}
+          COPERNICUS_CLIENT_SECRET: ${{ secrets.COPERNICUS_CLIENT_SECRET }}
+        run: |
+          python src/copernicus_api.py
+
       - name: Criar outputs
         run: mkdir -p outputs
 
       - name: Executar Pipeline
-        run: python main.py
+        env:
+          COPERNICUS_CLIENT_ID: ${{ secrets.COPERNICUS_CLIENT_ID }}
+          COPERNICUS_CLIENT_SECRET: ${{ secrets.COPERNICUS_CLIENT_SECRET }}
+        run: |
+          python main.py
 
       - name: Verificar Resultados
         run: |
