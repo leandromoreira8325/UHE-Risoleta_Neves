@@ -1,60 +1,86 @@
 """
 sentinel_search.py
 
-Busca de cenas Sentinel-2
-Copernicus Data Space Ecosystem
+Consulta ao catálogo STAC do
+Copernicus Data Space.
 """
 
 from __future__ import annotations
 
 import geopandas as gpd
 
-from src.config import SHAPEFILE_PATH
+from pystac_client import Client
+
+from src.config import (
+    SHAPEFILE_PATH,
+    DATA_INICIAL,
+    DATA_FINAL
+)
 
 
-def obter_bbox():
+STAC_URL = (
+    "https://catalogue.dataspace.copernicus.eu/stac"
+)
 
-    gdf = gpd.read_file(SHAPEFILE_PATH)
+
+def obter_geometria():
+
+    gdf = gpd.read_file(
+        SHAPEFILE_PATH
+    )
 
     if gdf.crs is None:
+
         raise ValueError(
-            "Shapefile sem CRS definido."
+            "Shapefile sem CRS."
         )
 
     if gdf.crs.to_epsg() != 4326:
-        gdf = gdf.to_crs(epsg=4326)
 
-    minx, miny, maxx, maxy = gdf.total_bounds
+        gdf = gdf.to_crs(
+            epsg=4326
+        )
 
-    return {
-        "xmin": float(minx),
-        "ymin": float(miny),
-        "xmax": float(maxx),
-        "ymax": float(maxy)
-    }
+    return (
+        gdf.unary_union
+        .__geo_interface__
+    )
+
+
+def listar_colecoes():
+
+    catalog = Client.open(
+        STAC_URL
+    )
+
+    print(
+        "\nCOLEÇÕES DISPONÍVEIS:\n"
+    )
+
+    for collection in (
+        catalog.get_collections()
+    ):
+
+        print(
+            collection.id
+        )
 
 
 def buscar_melhor_cena():
-    """
-    Função temporária para manter o pipeline funcionando.
-    """
 
-    bbox = obter_bbox()
+    geometria = obter_geometria()
 
     print(
-        f"[SENTINEL] BBOX: {bbox}"
+        "[SENTINEL] Geometria carregada."
     )
 
     return {
         "id": "TEMPORARIO",
         "data": "2026-09-15",
-        "nuvens": 0.0,
-        "bbox": bbox
+        "nuvens": 0.0
     }
 
 
 if __name__ == "__main__":
 
-    cena = buscar_melhor_cena()
-
-    print(cena)
+    listar_colecoes()
