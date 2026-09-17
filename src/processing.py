@@ -41,11 +41,9 @@ def processar_cena_mensal(cena: dict) -> dict:
     token = api.obter_token()
 
     try:
-        # Download streaming otimizado
         baixar_banda_stream(cena["B04"], str(b04_path), token)
         baixar_banda_stream(cena["B08"], str(b08_path), token)
 
-        # Localiza o shapefile do reservatório
         candidatos = list(base_dir.glob("*.shp")) + list(base_dir.glob("data/*.shp"))
         if not candidatos:
             raise FileNotFoundError(f"[ERRO CRÍTICO] Nenhum .shp encontrado em '{base_dir}'.")
@@ -53,7 +51,6 @@ def processar_cena_mensal(cena: dict) -> dict:
         target_shp = max(candidatos, key=os.path.getmtime)
         gdf = gpd.read_file(target_shp)
 
-        # Recorte raster mascarado pela geometria do reservatório
         with rasterio.open(b04_path) as src_b04:
             gdf_utm = gdf.to_crs(src_b04.crs)
             geometrias = [geom for geom in gdf_utm.geometry]
@@ -64,16 +61,14 @@ def processar_cena_mensal(cena: dict) -> dict:
             out_b08, _ = mask(src_b08, geometrias, crop=True)
             banda_nir = out_b08[0].astype(float)
 
-        # Cálculo do NDVI ($NDVI = \frac{NIR - RED}{NIR + RED}$)
         np.seterr(divide="ignore", invalid="ignore")
         ndvi = (banda_nir - banda_red) / (banda_nir + banda_red)
 
-        # Delimitação de macrófitas (NDVI > 0.20)
         pixels_macro = np.sum((ndvi > 0.20) & (ndvi <= 1.0))
 
         # Resolução Sentinel-2: 10m x 10m = 100 m² = 0.01 ha por pixel
         area_macro_ha = float(pixels_macro * 0.01)
-        area_reservatorio_ha = 1450.0
+        area_reservatorio_ha = 282.0  # Área corrigida do reservatório
         pct_ocupacao = (area_macro_ha / area_reservatorio_ha) * 100
 
         print(f"[PROCESSING] {data_cena} | Área de Macrófitas: {area_macro_ha:.2f} ha ({pct_ocupacao:.2f}%)")
@@ -88,7 +83,6 @@ def processar_cena_mensal(cena: dict) -> dict:
         }
 
     finally:
-        # Remoção dos arquivos temporários para otimizar espaço em disco
         if b04_path.exists():
             os.remove(b04_path)
         if b08_path.exists():
