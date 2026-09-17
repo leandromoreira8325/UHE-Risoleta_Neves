@@ -1,7 +1,7 @@
 """
 sentinel_search.py
 
-Busca da melhor cena Sentinel-2 L2A.
+Busca da melhor cena Sentinel-2 L2A via Bounding Box (bbox).
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from src.config import (
 STAC_URL = "https://catalogue.dataspace.copernicus.eu/stac"
 
 
-def obter_geometria():
+def obter_bbox():
     base_dir = Path(__file__).resolve().parent.parent
     candidatos = list(base_dir.glob("*.shp")) + list(base_dir.glob("data/*.shp")) + list(base_dir.glob("*.[sS][hH][pP]"))
 
@@ -30,7 +30,6 @@ def obter_geometria():
             "Certifique-se de que os arquivos do Shapefile foram enviados ao repositório."
         )
 
-    # Seleciona automaticamente o arquivo .shp mais recente
     target_shp = max(candidatos, key=os.path.getmtime)
     print(f"[SENTINEL_SEARCH] Lendo limite vetorial: {target_shp.name}")
 
@@ -39,17 +38,18 @@ def obter_geometria():
     if gdf.crs is None or str(gdf.crs).lower() != "epsg:4326":
         gdf = gdf.to_crs(epsg=4326)
 
-    return gdf.unary_union.__geo_interface__
+    # Retorna [minx, miny, maxx, maxy] para garantir compatibilidade com a API STAC
+    return list(gdf.total_bounds)
 
 
 def buscar_melhor_cena():
     catalog = Client.open(STAC_URL)
 
-    geometria = obter_geometria()
+    bbox = obter_bbox()
 
     search = catalog.search(
         collections=["sentinel-2-l2a"],
-        intersects=geometria,
+        bbox=bbox,
         datetime=f"{DATA_INICIAL}/{DATA_FINAL}",
         query={
             "eo:cloud_cover": {
@@ -59,6 +59,11 @@ def buscar_melhor_cena():
     )
 
     itens = list(search.items())
+
+    if not itens:
+        raise RuntimeError(
+            "[ERRO] Nenhuma cena Sentinel-2 encontrada no catálogo para a extensão e datas informadas."
+        )
 
     itens.sort(
         key=lambda item: item.properties.get("eo:cloud_cover", 100)
