@@ -1,105 +1,39 @@
 """
 sentinel_band_download.py
-
-Download direto das bandas Sentinel-2
-utilizando os links STAC.
 """
-
-from pathlib import Path
 
 import requests
 
-from src.config import DATA_DIR
-from src.copernicus_api import CopernicusDataSpaceAPI
+from src.copernicus_api import (
+    CopernicusDataSpaceAPI
+)
 
 
-def baixar_banda(
-    url: str,
-    nome_arquivo: str
-) -> Path:
-
-    DATA_DIR.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
-    destino = (
-        DATA_DIR /
-        nome_arquivo
-    )
+def testar_download(url: str):
 
     api = CopernicusDataSpaceAPI()
 
     token = api.obter_token()
 
+    print("\nTOKEN (30 primeiros):")
+    print(token[:30])
+
     headers = {
-        "Authorization":
-        f"Bearer {token}"
+        "Authorization": f"Bearer {token}"
     }
 
-    print(
-        f"[DOWNLOAD] {nome_arquivo}"
-    )
-
-    response = requests.get(
+    resposta = requests.get(
         url,
         headers=headers,
-        stream=True,
-        timeout=300
+        allow_redirects=False,
+        timeout=120
     )
 
-    response.raise_for_status()
+    print("\nSTATUS:")
+    print(resposta.status_code)
 
-    with open(
-        destino,
-        "wb"
-    ) as arquivo:
+    print("\nHEADERS:")
+    print(dict(resposta.headers))
 
-        for chunk in response.iter_content(
-            chunk_size=8192
-        ):
-
-            if chunk:
-
-                arquivo.write(
-                    chunk
-                )
-
-    print(
-        f"[DOWNLOAD] Salvo:"
-    )
-
-    print(
-        destino
-    )
-
-    return destino
-
-
-def baixar_bandas_principais(
-    cena: dict
-) -> dict:
-
-    arquivos = {}
-
-    arquivos["B03"] = baixar_banda(
-        cena["B03"],
-        "B03_10m.jp2"
-    )
-
-    arquivos["B04"] = baixar_banda(
-        cena["B04"],
-        "B04_10m.jp2"
-    )
-
-    arquivos["B08"] = baixar_banda(
-        cena["B08"],
-        "B08_10m.jp2"
-    )
-
-    arquivos["SCL"] = baixar_banda(
-        cena["SCL"],
-        "SCL_20m.jp2"
-    )
-
-    return arquivos
+    print("\nTEXTO:")
+    print(resposta.text[:500])
