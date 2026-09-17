@@ -60,8 +60,9 @@ def baixar_banda(
                 )
 
     print(
-        f"[DOWNLOAD] Salvo: "
-        f"{destino}"
+        f"[DOWNLOAD] Salvo:"
     )
+
+    print(destino)
 
     return destino
