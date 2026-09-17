@@ -1,7 +1,5 @@
 """
 sentinel_download.py
-
-Download de produtos Sentinel-2.
 """
 
 from pathlib import Path
@@ -15,11 +13,21 @@ from src.copernicus_api import CopernicusDataSpaceAPI
 def baixar_produto(
     product_id: str,
     nome_produto: str
-) -> Path:
+):
 
     api = CopernicusDataSpaceAPI()
 
     token = api.obter_token()
+
+    print(
+        f"[DOWNLOAD] Product ID: "
+        f"{product_id}"
+    )
+
+    print(
+        f"[DOWNLOAD] Produto: "
+        f"{nome_produto}"
+    )
 
     destino = (
         DATA_DIR /
@@ -31,49 +39,62 @@ def baixar_produto(
         f"odata/v1/Products({product_id})/$value"
     )
 
+    print(
+        f"[DOWNLOAD] URL:"
+    )
+
+    print(url)
+
     headers = {
         "Authorization":
         f"Bearer {token}"
     }
 
-    print(
-        f"[DOWNLOAD] Iniciando download: "
-        f"{nome_produto}"
-    )
+    try:
 
-    response = requests.get(
-        url,
-        headers=headers,
-        stream=True,
-        timeout=300
-    )
+        response = requests.get(
+            url,
+            headers=headers,
+            stream=True,
+            timeout=300
+        )
 
-    response.raise_for_status()
+        print(
+            f"[DOWNLOAD] Status:"
+            f" {response.status_code}"
+        )
 
-    with open(
-        destino,
-        "wb"
-    ) as arquivo:
+        response.raise_for_status()
 
-        for chunk in response.iter_content(
-            chunk_size=8192
-        ):
+        with open(
+            destino,
+            "wb"
+        ) as arquivo:
 
-            if chunk:
+            for chunk in response.iter_content(
+                chunk_size=8192
+            ):
 
-                arquivo.write(chunk)
+                if chunk:
 
-    print(
-        f"[DOWNLOAD] Arquivo salvo:"
-    )
+                    arquivo.write(
+                        chunk
+                    )
 
-    print(destino)
+        print(
+            f"[DOWNLOAD] Arquivo salvo:"
+        )
 
-    return destino
+        print(destino)
 
+        return destino
 
-if __name__ == "__main__":
+    except Exception as erro:
 
-    print(
-        "Módulo Sentinel Download carregado."
-    )
+        print(
+            "[DOWNLOAD ERRO]"
+        )
+
+        print(erro)
+
+        raise
