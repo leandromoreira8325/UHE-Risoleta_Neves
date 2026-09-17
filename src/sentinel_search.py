@@ -1,8 +1,7 @@
 """
 sentinel_search.py
 
-Busca da melhor cena Sentinel-2 L2A
-e retorna links diretos das bandas.
+Busca da melhor cena Sentinel-2 L2A.
 """
 
 from __future__ import annotations
@@ -79,19 +78,26 @@ def buscar_melhor_cena():
 
     melhor = itens[0]
 
-    assets = melhor.to_dict()["assets"]
+    privado = melhor.properties.get(
+        "_private",
+        {}
+    )
+
+    assets = melhor.to_dict()[
+        "assets"
+    ]
 
     cena = {
 
         "uuid":
-            melhor.properties["_private"][
+            privado.get(
                 "product_uuid"
-            ],
+            ),
 
         "nome_produto":
-            melhor.properties["_private"][
+            privado.get(
                 "product_name"
-            ],
+            ),
 
         "data":
             str(
