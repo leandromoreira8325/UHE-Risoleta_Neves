@@ -1,8 +1,7 @@
 """
 sentinel_download.py
 
-Download de produtos Sentinel-2
-Copernicus Data Space Ecosystem.
+Download de produtos Sentinel-2.
 """
 
 from pathlib import Path
@@ -21,12 +20,6 @@ def baixar_produto(
     api = CopernicusDataSpaceAPI()
 
     token = api.obter_token()
-
-    if token is None:
-
-        raise RuntimeError(
-            "Token Copernicus indisponível."
-        )
 
     destino = (
         DATA_DIR /
@@ -76,18 +69,11 @@ def baixar_produto(
 
     print(destino)
 
-    print(
-        "\n[DOWNLOAD] Conteúdo atual da pasta data:\n"
-    )
-
-    for arquivo in DATA_DIR.iterdir():
-
-        print(arquivo)
-
     return destino
 
 
 if __name__ == "__main__":
 
     print(
-        "Módulo de 
+        "Módulo Sentinel Download carregado."
+    )
