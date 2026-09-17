@@ -1,8 +1,5 @@
 """
 sentinel_search.py
-
-Busca da melhor cena Sentinel-2 L2A
-e retorna o UUID correto do produto.
 """
 
 from __future__ import annotations
@@ -85,53 +82,26 @@ def buscar_melhor_cena():
 
     melhor = itens[0]
 
-    cena = {
+    print(
+        "\nPROPRIEDADES DISPONÍVEIS:\n"
+    )
 
-        "product_id":
-            melhor.properties.get(
-                "productIdentifier"
-            ),
+    for chave in melhor.properties.keys():
 
-        "uuid":
-            melhor.id,
+        print(chave)
 
-        "nome_produto":
-            melhor.properties.get(
-                "title",
-                melhor.id
-            ),
-
-        "data":
-            str(
-                melhor.datetime
-            ),
-
-        "nuvens":
-            melhor.properties.get(
-                "eo:cloud_cover",
-                0
-            )
+    return {
+        "uuid": melhor.id,
+        "product_id": melhor.id,
+        "nome_produto": melhor.id,
+        "data": str(
+            melhor.datetime
+        ),
+        "nuvens": melhor.properties.get(
+            "eo:cloud_cover",
+            0
+        )
     }
-
-    print(
-        "\n[SENTINEL] Melhor cena encontrada:"
-    )
-
-    print(
-        f"UUID: {cena['uuid']}"
-    )
-
-    print(
-        f"Produto: "
-        f"{cena['nome_produto']}"
-    )
-
-    print(
-        f"Nuvens: "
-        f"{cena['nuvens']}%"
-    )
-
-    return cena
 
 
 if __name__ == "__main__":
