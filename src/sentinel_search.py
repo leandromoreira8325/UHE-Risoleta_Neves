@@ -1,6 +1,6 @@
 """
 sentinel_search.py
-Busca da melhor cena Sentinel-2 L2A com suporte a TCI (RGB) e sessão customizada para evitar bloqueio WAF.
+Busca da melhor cena Sentinel-2 L2A com suporte a TCI (RGB) e sessão customizada via StacApiIO.
 """
 
 from __future__ import annotations
@@ -8,25 +8,24 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import geopandas as gpd
-import requests
-from pystac.stac_io import DefaultStacIO
 from pystac_client import Client
+from pystac_client.stac_api_io import StacApiIO
 
 STAC_URL = "https://catalogue.dataspace.copernicus.eu/stac"
 
 
-class CustomStacIO(DefaultStacIO):
+class CustomStacIO(StacApiIO):
     """
-    Classe IO customizada para injetar o User-Agent em TODAS as chamadas HTTP
-    feitas pelo pystac_client, garantindo que requisições filhas/paginadas não sejam 
-    bloqueadas pelo WAF/Cloudflare no GitHub Actions.
+    Classe IO customizada estendendo StacApiIO para injetar o User-Agent
+    em todas as requisições do pystac_client e evitar bloqueios WAF no GitHub Actions.
     """
-    def __init__(self):
-        super().__init__()
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        })
+    def __init__(self, **kwargs):
+        headers = kwargs.pop("headers", {}) or {}
+        headers["User-Agent"] = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        super().__init__(headers=headers, **kwargs)
 
 
 def obter_bbox() -> list[float]:
@@ -50,7 +49,6 @@ def obter_bbox() -> list[float]:
 
 
 def buscar_melhor_cena(data_inicial: str, data_final: str) -> dict | None:
-    # Utiliza a classe StacIO customizada com User-Agent persistente em todas as requisições
     catalog = Client.open(STAC_URL, stac_io=CustomStacIO())
     bbox = obter_bbox()
 
