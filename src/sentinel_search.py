@@ -34,7 +34,9 @@ def obter_bbox() -> list[float]:
 
 
 def buscar_melhor_cena(data_inicial: str, data_final: str) -> dict | None:
-    catalog = Client.open(STAC_URL)
+    # Cabeçalho para evitar o bloqueio WAF/Cloudflare do Copernicus nos runners do GitHub
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    catalog = Client.open(STAC_URL, headers=headers)
     bbox = obter_bbox()
 
     for limite_nuvens in [20, 50]:
