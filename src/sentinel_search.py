@@ -1,29 +1,17 @@
 """
 sentinel_search.py
 
-Consulta ao catálogo STAC do
-Copernicus Data Space.
+Busca de cenas Sentinel-2.
 """
 
 from __future__ import annotations
 
 import geopandas as gpd
 
-from pystac_client import Client
-
-from src.config import (
-    SHAPEFILE_PATH,
-    DATA_INICIAL,
-    DATA_FINAL
-)
+from src.config import SHAPEFILE_PATH
 
 
-STAC_URL = (
-    "https://catalogue.dataspace.copernicus.eu/stac"
-)
-
-
-def obter_geometria():
+def obter_bbox():
 
     gdf = gpd.read_file(
         SHAPEFILE_PATH
@@ -41,46 +29,43 @@ def obter_geometria():
             epsg=4326
         )
 
-    return (
-        gdf.unary_union
-        .__geo_interface__
+    minx, miny, maxx, maxy = (
+        gdf.total_bounds
     )
 
-
-def listar_colecoes():
-
-    catalog = Client.open(
-        STAC_URL
-    )
-
-    print(
-        "\nCOLEÇÕES DISPONÍVEIS:\n"
-    )
-
-    for collection in (
-        catalog.get_collections()
-    ):
-
-        print(
-            collection.id
-        )
+    return {
+        "xmin": float(minx),
+        "ymin": float(miny),
+        "xmax": float(maxx),
+        "ymax": float(maxy)
+    }
 
 
 def buscar_melhor_cena():
 
-    geometria = obter_geometria()
+    bbox = obter_bbox()
 
     print(
-        "[SENTINEL] Geometria carregada."
+        f"[SENTINEL] BBOX: {bbox}"
     )
 
+    #
+    # TEMPORÁRIO
+    # Enquanto implementamos a consulta
+    # real ao catálogo STAC
+    #
+
     return {
-        "id": "TEMPORARIO",
+        "product_id": None,
+        "nome_produto": None,
         "data": "2026-09-15",
-        "nuvens": 0.0
+        "nuvens": 0.0,
+        "bbox": bbox
     }
 
 
 if __name__ == "__main__":
 
-    listar_colecoes()
+    print(
+        buscar_melhor_cena()
+    )
