@@ -2,7 +2,7 @@
 sentinel_search.py
 
 Busca da melhor cena Sentinel-2 L2A
-para o reservatório da UHE Risoleta Neves.
+e retorna links diretos das bandas.
 """
 
 from __future__ import annotations
@@ -28,12 +28,6 @@ def obter_geometria():
     gdf = gpd.read_file(
         SHAPEFILE_PATH
     )
-
-    if gdf.crs is None:
-
-        raise ValueError(
-            "Shapefile sem CRS."
-        )
 
     if gdf.crs.to_epsg() != 4326:
 
@@ -75,12 +69,6 @@ def buscar_melhor_cena():
         search.items()
     )
 
-    if not itens:
-
-        raise RuntimeError(
-            "Nenhuma cena encontrada."
-        )
-
     itens.sort(
         key=lambda item:
         item.properties.get(
@@ -91,30 +79,19 @@ def buscar_melhor_cena():
 
     melhor = itens[0]
 
-    privado = melhor.properties.get(
-        "_private",
-        {}
-    )
-
-    product_uuid = privado.get(
-        "product_uuid"
-    )
-
-    product_name = privado.get(
-        "product_name",
-        melhor.id
-    )
+    assets = melhor.to_dict()["assets"]
 
     cena = {
 
         "uuid":
-            product_uuid,
-
-        "product_id":
-            product_uuid,
+            melhor.properties["_private"][
+                "product_uuid"
+            ],
 
         "nome_produto":
-            product_name,
+            melhor.properties["_private"][
+                "product_name"
+            ],
 
         "data":
             str(
@@ -125,7 +102,27 @@ def buscar_melhor_cena():
             melhor.properties.get(
                 "eo:cloud_cover",
                 0
-            )
+            ),
+
+        "B03":
+            assets["B03_10m"][
+                "alternate"
+            ]["https"]["href"],
+
+        "B04":
+            assets["B04_10m"][
+                "alternate"
+            ]["https"]["href"],
+
+        "B08":
+            assets["B08_10m"][
+                "alternate"
+            ]["https"]["href"],
+
+        "SCL":
+            assets["SCL_20m"][
+                "alternate"
+            ]["https"]["href"]
     }
 
     print(
@@ -133,24 +130,11 @@ def buscar_melhor_cena():
     )
 
     print(
-        f"UUID: {product_uuid}"
-    )
-
-    print(
-        f"Produto: {product_name}"
+        cena["nome_produto"]
     )
 
     print(
         f"Nuvens: {cena['nuvens']}%"
     )
 
-    print(
-        f"Data: {cena['data']}"
-    )
-
     return cena
-
-
-if __name__ == "__main__":
-
-    buscar_melhor_cena()
