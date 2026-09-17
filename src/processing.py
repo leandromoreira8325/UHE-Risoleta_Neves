@@ -119,7 +119,7 @@ def processar_cena_mensal(cena: dict) -> dict:
         tci_extent = [xmin_tci, xmax_tci, ymin_tci, ymax_tci]
 
         ax2.imshow(rgb, extent=tci_extent)
-        gdf_utm.plot(ax2, facecolor='none', edgecolor='#FFD700', linewidth=1.0, linestyle='--')
+        gdf_utm.plot(ax=ax2, facecolor='none', edgecolor='#FFD700', linewidth=1.0, linestyle='--')
         
         patch_tci_border = mpatches.Patch(facecolor='none', edgecolor='#FFD700', label='Limite do Reservatório')
         ax2.legend(handles=[patch_tci_border], loc='upper right', fontsize=8, framealpha=0.9)
