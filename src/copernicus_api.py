@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-
 import requests
 
 
@@ -50,6 +49,12 @@ class CopernicusDataSpaceAPI:
 
         response.raise_for_status()
 
-        return response.json().get(
+        token = response.json().get(
             "access_token"
         )
+
+        print(
+            f"[COPERNICUS] Token obtido: {token[:30]}..."
+        )
+
+        return token
