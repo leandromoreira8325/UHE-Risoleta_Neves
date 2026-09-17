@@ -1,5 +1,7 @@
 """
 processing.py
+
+Fluxo principal do monitoramento.
 """
 
 from src.config import SHAPEFILE_PATH
@@ -22,7 +24,23 @@ def processar_dados_2026():
     )
 
     print(
-        "[PROCESSING] Próxima etapa: download das bandas B03, B04, B08 e SCL."
+        "[PROCESSING] Bandas disponíveis:"
+    )
+
+    print(
+        f"B03: {cena['B03']}"
+    )
+
+    print(
+        f"B04: {cena['B04']}"
+    )
+
+    print(
+        f"B08: {cena['B08']}"
+    )
+
+    print(
+        f"SCL: {cena['SCL']}"
     )
 
     dados_serie = [
