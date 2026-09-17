@@ -67,4 +67,3 @@ def buscar_melhor_cena():
 if __name__ == "__main__":
 
     buscar_melhor_cena()
-``
