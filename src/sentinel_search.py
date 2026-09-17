@@ -2,13 +2,10 @@
 sentinel_search.py
 
 Busca da melhor cena Sentinel-2 L2A
-e exibe todo o conteúdo STAC para
-identificar o link correto de download.
+para o reservatório da UHE Risoleta Neves.
 """
 
 from __future__ import annotations
-
-import json
 
 import geopandas as gpd
 
@@ -31,6 +28,12 @@ def obter_geometria():
     gdf = gpd.read_file(
         SHAPEFILE_PATH
     )
+
+    if gdf.crs is None:
+
+        raise ValueError(
+            "Shapefile sem CRS."
+        )
 
     if gdf.crs.to_epsg() != 4326:
 
@@ -88,30 +91,64 @@ def buscar_melhor_cena():
 
     melhor = itens[0]
 
-    print(
-        "\nITEM STAC COMPLETO\n"
+    privado = melhor.properties.get(
+        "_private",
+        {}
     )
 
-    print(
-        json.dumps(
-            melhor.to_dict(),
-            indent=2,
-            ensure_ascii=False
-        )
+    product_uuid = privado.get(
+        "product_uuid"
     )
 
-    return {
-        "uuid": melhor.id,
-        "product_id": melhor.id,
-        "nome_produto": melhor.id,
-        "data": str(
-            melhor.datetime
-        ),
-        "nuvens": melhor.properties.get(
-            "eo:cloud_cover",
-            0
-        )
+    product_name = privado.get(
+        "product_name",
+        melhor.id
+    )
+
+    cena = {
+
+        "uuid":
+            product_uuid,
+
+        "product_id":
+            product_uuid,
+
+        "nome_produto":
+            product_name,
+
+        "data":
+            str(
+                melhor.datetime
+            ),
+
+        "nuvens":
+            melhor.properties.get(
+                "eo:cloud_cover",
+                0
+            )
     }
+
+    print(
+        "\n[SENTINEL] Melhor cena encontrada:"
+    )
+
+    print(
+        f"UUID: {product_uuid}"
+    )
+
+    print(
+        f"Produto: {product_name}"
+    )
+
+    print(
+        f"Nuvens: {cena['nuvens']}%"
+    )
+
+    print(
+        f"Data: {cena['data']}"
+    )
+
+    return cena
 
 
 if __name__ == "__main__":
