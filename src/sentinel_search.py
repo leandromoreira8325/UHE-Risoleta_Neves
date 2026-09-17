@@ -1,7 +1,7 @@
 """
 sentinel_search.py
 
-Consulta Sentinel-2 via STAC.
+Busca da melhor cena Sentinel-2 L2A.
 """
 
 from __future__ import annotations
@@ -10,8 +10,12 @@ import geopandas as gpd
 
 from pystac_client import Client
 
-from src.config import SHAPEFILE_PATH
-
+from src.config import (
+    SHAPEFILE_PATH,
+    DATA_INICIAL,
+    DATA_FINAL,
+    NUVEM_MAXIMA
+)
 
 STAC_URL = (
     "https://catalogue.dataspace.copernicus.eu/stac"
@@ -42,26 +46,73 @@ def buscar_melhor_cena():
         STAC_URL
     )
 
-    print(
-        "[SENTINEL] Catálogo acessado."
+    geometria = obter_geometria()
+
+    search = catalog.search(
+        collections=[
+            "sentinel-2-l2a"
+        ],
+        intersects=geometria,
+        datetime=(
+            f"{DATA_INICIAL}/"
+            f"{DATA_FINAL}"
+        ),
+        query={
+            "eo:cloud_cover": {
+                "lt": NUVEM_MAXIMA
+            }
+        }
     )
 
-    print(
-        "\nCOLEÇÕES DISPONÍVEIS:\n"
+    itens = list(
+        search.items()
     )
 
-    for collection in (
-        catalog.get_collections()
-    ):
+    if not itens:
 
-        print(collection.id)
+        raise RuntimeError(
+            "Nenhuma cena encontrada."
+        )
 
-    return {
-        "product_id": None,
-        "nome_produto": None,
-        "data": "2026-09-15",
-        "nuvens": 0.0
+    itens.sort(
+        key=lambda item:
+        item.properties.get(
+            "eo:cloud_cover",
+            100
+        )
+    )
+
+    melhor = itens[0]
+
+    cena = {
+        "product_id": melhor.id,
+        "nome_produto": melhor.id,
+        "data": str(
+            melhor.datetime
+        ),
+        "nuvens": melhor.properties.get(
+            "eo:cloud_cover",
+            0
+        )
     }
+
+    print(
+        "\n[SENTINEL] Melhor cena encontrada:"
+    )
+
+    print(
+        f"Produto: {cena['nome_produto']}"
+    )
+
+    print(
+        f"Nuvens: {cena['nuvens']}%"
+    )
+
+    print(
+        f"Data: {cena['data']}"
+    )
+
+    return cena
 
 
 if __name__ == "__main__":
