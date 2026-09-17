@@ -8,10 +8,6 @@ from src.sentinel_search import (
     buscar_melhor_cena
 )
 
-from src.sentinel_band_download import (
-    baixar_bandas_principais
-)
-
 
 def processar_dados_2026():
 
@@ -22,17 +18,7 @@ def processar_dados_2026():
     cena = buscar_melhor_cena()
 
     print(
-        "[PROCESSING] Baixando bandas..."
-    )
-
-    arquivos = (
-        baixar_bandas_principais(
-            cena
-        )
-    )
-
-    print(
-        arquivos
+        "[PROCESSING] Cena Sentinel localizada."
     )
 
     dados_serie = [
