@@ -1,7 +1,6 @@
 """
 report.py
-Geração do relatório PDF utilizando os mapas compostos (Classificação + Cor Real TCI)
-e os dados atualizados do reservatório (282 ha).
+Geração do relatório PDF consolidado de monitoramento de macrófitas (UHE Risoleta Neves).
 """
 
 from __future__ import annotations
@@ -23,9 +22,19 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 
-def gerar_relatorio_consolidado(dados_mensais: list[dict], output_path: str = "relatorio_monitoramento_2026.pdf") -> str:
+def gerar_relatorio_consolidado(dados_mensais: list[dict], output_path: str = "outputs") -> str:
+    target = Path(output_path)
+    
+    # Se o parâmetro for um diretório ou não tiver extensão .pdf, concatena o nome do arquivo
+    if target.is_dir() or target.suffix.lower() != ".pdf":
+        target.mkdir(parents=True, exist_ok=True)
+        pdf_file = target / "relatorio_monitoramento_2026.pdf"
+    else:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        pdf_file = target
+
     doc = SimpleDocTemplate(
-        output_path,
+        str(pdf_file),
         pagesize=A4,
         rightMargin=36,
         leftMargin=36,
@@ -97,7 +106,7 @@ def gerar_relatorio_consolidado(dados_mensais: list[dict], output_path: str = "r
     story.append(t)
     story.append(PageBreak())
 
-    # 3. Anexo de Pranchas Cartográficas (Classificação + Cor Real RGB/TCI)
+    # 3. Anexo de Pranchas Cartográficas
     for d in dados_mensais:
         mapa_path = d.get("mapa_path")
         data_cena = d.get("data_cena", "N/A")
@@ -113,8 +122,8 @@ def gerar_relatorio_consolidado(dados_mensais: list[dict], output_path: str = "r
         story.append(PageBreak())
 
     doc.build(story)
-    print(f"[REPORT] Relatório PDF gerado com sucesso em: {output_path}")
-    return output_path
+    print(f"[REPORT] Relatório PDF gerado com sucesso em: {pdf_file}")
+    return str(pdf_file)
 
 
 # Alias para retrocompatibilidade
