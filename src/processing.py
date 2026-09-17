@@ -1,17 +1,11 @@
 """
 processing.py
-
-Fluxo principal de processamento.
 """
 
 from src.config import SHAPEFILE_PATH
 
 from src.sentinel_search import (
     buscar_melhor_cena
-)
-
-from src.sentinel_download import (
-    baixar_produto
 )
 
 
@@ -23,24 +17,13 @@ def processar_dados_2026():
 
     cena = buscar_melhor_cena()
 
-    if cena is None:
-
-        raise RuntimeError(
-            "Nenhuma cena Sentinel encontrada."
-        )
-
     print(
-        "[PROCESSING] Baixando cena..."
+        "[PROCESSING] Cena Sentinel localizada."
     )
 
-    if (
-        cena["uuid"] is not None
-    ):
-
-        baixar_produto(
-            cena["uuid"],
-            cena["nome_produto"]
-        )
+    print(
+        "[PROCESSING] Próxima etapa: download das bandas B03, B04, B08 e SCL."
+    )
 
     dados_serie = [
         {
