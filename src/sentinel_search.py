@@ -1,8 +1,14 @@
 """
 sentinel_search.py
+
+Busca da melhor cena Sentinel-2 L2A
+e exibe todo o conteúdo STAC para
+identificar o link correto de download.
 """
 
 from __future__ import annotations
+
+import json
 
 import geopandas as gpd
 
@@ -83,12 +89,16 @@ def buscar_melhor_cena():
     melhor = itens[0]
 
     print(
-        "\nPROPRIEDADES DISPONÍVEIS:\n"
+        "\nITEM STAC COMPLETO\n"
     )
 
-    for chave in melhor.properties.keys():
-
-        print(chave)
+    print(
+        json.dumps(
+            melhor.to_dict(),
+            indent=2,
+            ensure_ascii=False
+        )
+    )
 
     return {
         "uuid": melhor.id,
