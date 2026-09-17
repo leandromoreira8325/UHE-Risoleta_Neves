@@ -1,5 +1,7 @@
 """
 processing.py
+
+Fluxo principal de processamento.
 """
 
 from src.config import SHAPEFILE_PATH
@@ -32,16 +34,15 @@ def processar_dados_2026():
     )
 
     if (
-        cena["product_id"] is not None
+        cena["uuid"] is not None
     ):
 
         baixar_produto(
-            cena["product_id"],
+            cena["uuid"],
             cena["nome_produto"]
         )
 
     dados_serie = [
-
         {
             "mes": str(
                 cena["data"]
