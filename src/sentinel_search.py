@@ -1,6 +1,6 @@
 """
 sentinel_search.py
-Busca da melhor cena Sentinel-2 L2A com tolerância adaptativa de nuvens.
+Busca da melhor cena Sentinel-2 L2A com suporte a TCI (RGB).
 """
 
 from __future__ import annotations
@@ -37,7 +37,6 @@ def buscar_melhor_cena(data_inicial: str, data_final: str) -> dict | None:
     catalog = Client.open(STAC_URL)
     bbox = obter_bbox()
 
-    # Tenta primeiro com limite rigoroso (20%), depois flexibiliza até 50%
     for limite_nuvens in [20, 50]:
         search = catalog.search(
             collections=["sentinel-2-l2a"],
@@ -68,6 +67,7 @@ def buscar_melhor_cena(data_inicial: str, data_final: str) -> dict | None:
         "B03": assets["B03_10m"]["alternate"]["https"]["href"],
         "B04": assets["B04_10m"]["alternate"]["https"]["href"],
         "B08": assets["B08_10m"]["alternate"]["https"]["href"],
+        "TCI": assets["TCI_10m"]["alternate"]["https"]["href"],
         "SCL": assets["SCL_20m"]["alternate"]["https"]["href"],
     }
 
