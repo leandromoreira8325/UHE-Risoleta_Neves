@@ -1,19 +1,23 @@
 """
 processing.py
-
-Fluxo principal de processamento.
-
-Versão estável preparada para integração
-com Sentinel-2.
 """
 
 from src.config import SHAPEFILE_PATH
-from src.sentinel_search import buscar_melhor_cena
+
+from src.sentinel_search import (
+    buscar_melhor_cena
+)
+
+from src.sentinel_download import (
+    baixar_produto
+)
 
 
 def processar_dados_2026():
 
-    print("[PROCESSING] Iniciando processamento...")
+    print(
+        "[PROCESSING] Iniciando processamento..."
+    )
 
     cena = buscar_melhor_cena()
 
@@ -23,7 +27,21 @@ def processar_dados_2026():
             "Nenhuma cena Sentinel encontrada."
         )
 
+    print(
+        "[PROCESSING] Baixando cena..."
+    )
+
+    if (
+        cena["product_id"] is not None
+    ):
+
+        baixar_produto(
+            cena["product_id"],
+            cena["nome_produto"]
+        )
+
     dados_serie = [
+
         {
             "mes": str(
                 cena["data"]
@@ -39,14 +57,6 @@ def processar_dados_2026():
             )
         }
     ]
-
-    print(
-        "[PROCESSING] Cena Sentinel localizada."
-    )
-
-    print(
-        "[PROCESSING] Download das bandas ainda não implementado."
-    )
 
     return (
         dados_serie,
