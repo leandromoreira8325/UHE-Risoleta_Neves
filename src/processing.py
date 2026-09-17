@@ -1,13 +1,15 @@
 """
 processing.py
-
-Fluxo principal do monitoramento.
 """
 
 from src.config import SHAPEFILE_PATH
 
 from src.sentinel_search import (
     buscar_melhor_cena
+)
+
+from src.sentinel_band_download import (
+    baixar_bandas_principais
 )
 
 
@@ -20,27 +22,17 @@ def processar_dados_2026():
     cena = buscar_melhor_cena()
 
     print(
-        "[PROCESSING] Cena Sentinel localizada."
+        "[PROCESSING] Baixando bandas..."
+    )
+
+    arquivos = (
+        baixar_bandas_principais(
+            cena
+        )
     )
 
     print(
-        "[PROCESSING] Bandas disponíveis:"
-    )
-
-    print(
-        f"B03: {cena['B03']}"
-    )
-
-    print(
-        f"B04: {cena['B04']}"
-    )
-
-    print(
-        f"B08: {cena['B08']}"
-    )
-
-    print(
-        f"SCL: {cena['SCL']}"
+        arquivos
     )
 
     dados_serie = [
