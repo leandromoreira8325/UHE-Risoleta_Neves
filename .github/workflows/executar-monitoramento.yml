@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: relatorio-mensal-macrofitas-risoleta-neves
-          path: outputs/uhe_risoleta_neves/relatorio_mensal.pdf
+          path: outputs/**/relatorio_mensal.pdf
 
       - name: Commit e Push dos Arquivos Gerados (Outputs)
         env:
