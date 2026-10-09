@@ -28,10 +28,12 @@ jobs:
 
       - name: Executar Pipeline (Risoleta Neves)
         env:
-          COPERNICUS_USER: ${{ secrets.CDSE_CLIENT_ID }}
-          COPERNICUS_PASSWORD: ${{ secrets.CDSE_CLIENT_SECRET }}
-          CDSE_CLIENT_ID: ${{ secrets.CDSE_CLIENT_ID }}
-          CDSE_CLIENT_SECRET: ${{ secrets.CDSE_CLIENT_SECRET }}
+          COPERNICUS_USER: ${{ secrets.COPERNICUS_USER }}
+          COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
+          COPERNICUS_CLIENT_ID: ${{ secrets.COPERNICUS_CLIENT_ID }}
+          COPERNICUS_CLIENT_SECRET: ${{ secrets.COPERNICUS_CLIENT_SECRET }}
+          CDSE_CLIENT_ID: ${{ secrets.COPERNICUS_CLIENT_ID || secrets.COPERNICUS_USER }}
+          CDSE_CLIENT_SECRET: ${{ secrets.COPERNICUS_CLIENT_SECRET || secrets.COPERNICUS_PASSWORD }}
         run: |
           python main.py config/uhe_risoleta_neves.yaml
 
