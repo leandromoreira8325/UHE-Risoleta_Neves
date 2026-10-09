@@ -1,48 +1,13 @@
-name: Monitoramento UHE Risoleta Neves
+empreendimento:
+  nome: "UHE Risoleta Neves"
+  empresa: "ALIANÇA GERAÇÃO DE ENERGIA S.A."
+  area_oficial_ha: 270.00          # Área oficial do espelho d'água (ajuste se necessário)
+  limite_alerta_ha: 30.00           # Limite operacional de alerta (ha)
+  latitude_media: -20.20           # Latitude média da usina
+  vetor_path: "data/Reservatotio_Risoleta.shp"
+  output_dir: "outputs/uhe_risoleta_neves"
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout do Repositório
-        uses: actions/checkout@v4
-
-      - name: Configurar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          cache: 'pip'
-
-      - name: Instalar Dependências
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then 
-            pip install -r requirements.txt; 
-          else 
-            pip install geopandas matplotlib shapely reportlab numpy requests rasterio; 
-          fi
-
-      - name: Garantir Diretório de Saída
-        run: mkdir -p outputs
-
-      - name: Executar Pipeline Principal
-        env:
-          PYTHONPATH: src
-          COPERNICUS_USER: ${{ secrets.COPERNICUS_USER }}
-          COPERNICUS_PASSWORD: ${{ secrets.COPERNICUS_PASSWORD }}
-          COPERNICUS_CLIENT_ID: ${{ secrets.COPERNICUS_CLIENT_ID }}
-          COPERNICUS_CLIENT_SECRET: ${{ secrets.COPERNICUS_CLIENT_SECRET }}
-        run: python main.py
-
-      - name: Salvar Artefatos do Relatório
-        uses: actions/upload-artifact@v4
-        with:
-          name: relatorio-e-mapa
-          path: outputs/
-          if-no-files-found: warn
+processamento:
+  buffer_analise_m: -12             # Buffer negativo para análise de margens
+  buffer_rgb_m: 30                  # Buffer positivo de +30m para True Color RGB
+  max_nuvens_pct: 35                # Tolerância máxima de nebulosidade
