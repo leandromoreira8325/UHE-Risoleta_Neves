@@ -7,6 +7,9 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-and-process:
     runs-on: ubuntu-latest
@@ -40,8 +43,8 @@ jobs:
       - name: Upload do Relatório PDF como Artefato
         uses: actions/upload-artifact@v4
         with:
-          name: relatorio-mensal-macrofitas-risoleta-neves
-          path: outputs/**/relatorio_mensal.pdf
+          name: relatorio-monitoramento-risoleta-neves-2026
+          path: outputs/relatorio_monitoramento_2026.pdf
 
       - name: Commit e Push dos Arquivos Gerados (Outputs)
         env:
