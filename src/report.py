@@ -1,130 +1,204 @@
-"""
-report.py
-Geração do relatório PDF consolidado de monitoramento de macrófitas (UHE Risoleta Neves).
-"""
-
-from __future__ import annotations
-
 import os
-from pathlib import Path
-from reportlab.lib.pagesizes import A4
+import matplotlib.pyplot as plt
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
-from reportlab.lib.units import inch
 from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle,
-    Image,
-    PageBreak,
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfgen import canvas
+
+class NumberedCanvas(canvas.Canvas):
+    """Canvas de duas passadas para numeração dinâmica de páginas 'Página X'."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            super().showPage()
+        super().save()
+
+    def draw_page_number(self, page_count):
+        self.setFont("Helvetica", 8)
+        self.setFillColor(colors.HexColor("#555555"))
+        self.drawRightString(280 * 2.83465, 10 * 2.83465, f"Página {self._pageNumber} de {page_count}")
 
 
-def gerar_relatorio_consolidado(dados_mensais: list[dict], output_path: str = "outputs") -> str:
-    target = Path(output_path)
+def gerar_grafico_evolucao(resultados, output_path, limite_alerta_ha=30.0):
+    """Gera o gráfico de linha de evolução temporal da área de macrófitas."""
+    meses = [r['mes'].split('/')[0] for r in resultados]
+    areas = []
+    for r in resultados:
+        val_str = r.get('area', '0').replace(' ha', '').strip()
+        try:
+            areas.append(float(val_str))
+        except ValueError:
+            areas.append(0.0)
+
+    plt.figure(figsize=(9, 4.5), dpi=300)
+    plt.plot(meses, areas, marker='o', color='#1f77b4', linewidth=2, label='Área Ocupada (ha)')
+    plt.axhline(y=limite_alerta_ha, color='red', linestyle='--', linewidth=1.5, label=f'Limite de Alerta ({limite_alerta_ha:.2f} ha)')
     
-    # Se o parâmetro for um diretório ou não tiver extensão .pdf, concatena o nome do arquivo
-    if target.is_dir() or target.suffix.lower() != ".pdf":
-        target.mkdir(parents=True, exist_ok=True)
-        pdf_file = target / "relatorio_monitoramento_2026.pdf"
-    else:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        pdf_file = target
+    plt.title("Evolução Temporal da Área de Macrófitas - UHE Risoleta Neves (2026)", fontsize=11, fontweight='bold', pad=12)
+    plt.xlabel("Mês / Período Processado", fontsize=9)
+    plt.ylabel("Área de Macrófitas (ha)", fontsize=9)
+    plt.grid(True, linestyle=':', alpha=0.6)
+    plt.legend(loc='upper right', fontsize=8)
+    plt.tight_layout()
+    plt.savefig(output_path, bbox_inches='tight')
+    plt.close()
 
+
+def gerar_relatorio_consolidado(resultados, pranchas_rgb_png, pranchas_mapa_png, output_dir, area_oficial_ha=270.0, limite_alerta_ha=30.0):
+    pdf_path = os.path.join(output_dir, "relatorio_monitoramento_2026.pdf")
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Configuração de orientação Landscape A4
     doc = SimpleDocTemplate(
-        str(pdf_file),
-        pagesize=A4,
-        rightMargin=36,
-        leftMargin=36,
-        topMargin=36,
-        bottomMargin=36,
+        pdf_path,
+        pagesize=landscape(A4),
+        rightMargin=15, leftMargin=15, topMargin=20, bottomMargin=20
+    )
+
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'DocTitle', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=14, leading=18,
+        alignment=1, textColor=colors.HexColor('#002B49'), spaceAfter=10
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'DocSubtitle', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=12, leading=15,
+        alignment=0, textColor=colors.HexColor('#002B49'), spaceBefore=8, spaceAfter=6
+    )
+
+    body_style = ParagraphStyle(
+        'Body', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=9, leading=12,
+        alignment=4, textColor=colors.HexColor('#333333'), spaceAfter=8
+    )
+
+    cell_style = ParagraphStyle(
+        'CellText', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=8, leading=10, alignment=1
+    )
+
+    cell_style_bold = ParagraphStyle(
+        'CellTextBold', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=1, textColor=colors.white
     )
 
     story = []
-    styles = getSampleStyleSheet()
 
-    # Estilos customizados
-    title_style = ParagraphStyle(
-        "DocTitle",
-        parent=styles["Heading1"],
-        fontSize=18,
-        leading=22,
-        textColor=colors.HexColor("#1A365D"),
-        alignment=1,
-        spaceAfter=6,
+    # -------------------------------------------------------------------------
+    # PÁGINA 1: RESUMO OPERACIONAL CONSOLIDADO
+    # -------------------------------------------------------------------------
+    story.append(Paragraph("MONITORAMENTO DE MACRÓFITAS E QUALIDADE DA ÁGUA - UHE RISOLETA NEVES (2026)", title_style))
+    story.append(Paragraph("RELATÓRIO OPERACIONAL CONSOLIDADO", ParagraphStyle('Sub', parent=title_style, fontSize=12, leading=14)))
+    story.append(Spacer(1, 8))
+
+    # 1. Metodologia
+    story.append(Paragraph("1. Metodologia Completa de Processamento Geoespacial", subtitle_style))
+    desc_metodo = (
+        f"O monitoramento utiliza automação via API no Copernicus Data Space Ecosystem para obtenção de imagens multispectrais "
+        f"de alta resolução do satélite Sentinel-2/MSI. Para cada período mensal, o sistema seleciona a melhor cena disponível com menor índice "
+        f"de nebulosidade. Um buffer geométrico negativo de 12 metros é aplicado na poligonal do reservatório para eliminar ruídos de margem. "
+        f"O cálculo de biomassa aquática emprega os índices NDVI e MNDWI sobre a área oficial de espelho d'água de {area_oficial_ha:.2f} hectares."
     )
-    subtitle_style = ParagraphStyle(
-        "DocSubTitle",
-        parent=styles["Normal"],
-        fontSize=11,
-        leading=14,
-        textColor=colors.HexColor("#4A5568"),
-        alignment=1,
-        spaceAfter=15,
-    )
-    section_style = ParagraphStyle(
-        "SectionHeading",
-        parent=styles["Heading2"],
-        fontSize=13,
-        leading=16,
-        textColor=colors.HexColor("#2B6CB0"),
-        spaceBefore=12,
-        spaceAfter=8,
-    )
+    story.append(Paragraph(desc_metodo, body_style))
+    story.append(Spacer(1, 6))
 
-    # 1. Cabeçalho Principal
-    story.append(Paragraph("Relatório de Monitoramento de Macrófitas (2026)", title_style))
-    story.append(Paragraph("Empreendimento: UHE Risoleta Neves (Candonga) | Área de Espelho d'Água: 282 ha", subtitle_style))
-    story.append(Spacer(1, 10))
+    # 2. Tabela Consolidada
+    story.append(Paragraph("2. Tabela de Resultados Operacionais Acumulados (2026)", subtitle_style))
+    
+    headers = [
+        Paragraph("Mês", cell_style_bold),
+        Paragraph("Data da Cena", cell_style_bold),
+        Paragraph("Área Mac.", cell_style_bold),
+        Paragraph("Espelho", cell_style_bold),
+        Paragraph("Ocupação", cell_style_bold),
+        Paragraph("Status", cell_style_bold)
+    ]
+    
+    table_data = [headers]
+    for r in resultados:
+        row = [
+            Paragraph(r.get('mes', ''), cell_style),
+            Paragraph(r.get('data_cena', ''), cell_style),
+            Paragraph(r.get('area', ''), cell_style),
+            Paragraph(f"{area_oficial_ha:.2f} ha", cell_style),
+            Paragraph(r.get('ocupacao', ''), cell_style),
+            Paragraph(f"<b>{r.get('status', 'REGULAR')}</b>", cell_style)
+        ]
+        table_data.append(row)
 
-    # 2. Tabela Resumo Consolidada
-    story.append(Paragraph("Resumo Executivo do Monitoramento Mensal", section_style))
-
-    tabela_data = [["Mês Ref.", "Data Cena", "Nuvens (%)", "Área (ha)", "Ocupação (%)"]]
-    for d in dados_mensais:
-        tabela_data.append([
-            d.get("mes_ref", "-"),
-            d.get("data_cena", "-"),
-            f"{d.get('nuvens', 0.0):.1f}%",
-            f"{d.get('area_ha', 0.0):.2f}",
-            f"{d.get('percentual', 0.0):.2f}%",
-        ])
-
-    t = Table(tabela_data, colWidths=[1.1 * inch, 1.3 * inch, 1.2 * inch, 1.2 * inch, 1.4 * inch])
+    t = Table(table_data, colWidths=[90, 160, 100, 100, 100, 100])
     t.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2B6CB0")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
-        ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
-        ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F7FAFC")),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E0")),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#002B49')),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CCCCCC')),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor('#F8F9FA')]),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ]))
     story.append(t)
-    story.append(PageBreak())
+    story.append(Spacer(1, 12))
 
-    # 3. Anexo de Pranchas Cartográficas
-    for d in dados_mensais:
-        mapa_path = d.get("mapa_path")
-        data_cena = d.get("data_cena", "N/A")
-        mes_ref = d.get("mes_ref", "N/A")
+    # 3. Gráfico de Evolução
+    grafico_path = os.path.join(output_dir, "grafico_evolucao_temp.png")
+    gerar_grafico_evolucao(resultados, grafico_path, limite_alerta_ha=limite_alerta_ha)
+    
+    story.append(Paragraph("3. Gráfico de Evolução Temporal", subtitle_style))
+    story.append(Image(grafico_path, width=500, height=180))
+    story.append(Spacer(1, 8))
 
-        story.append(Paragraph(f"Prancha de Monitoramento - {mes_ref} ({data_cena})", section_style))
+    # 4. Conclusão
+    story.append(Paragraph("4. Conclusão e Diagnóstico Operacional", subtitle_style))
+    
+    # Avaliação de alerta
+    max_area = max([float(r.get('area', '0').replace(' ha', '').strip() or 0) for r in resultados] + [0])
+    status_geral = "REGULAR" if max_area <= limite_alerta_ha else "ATENÇÃO"
+    
+    diagnostico = (
+        f"<b>SITUAÇÃO {status_geral}:</b> O monitoramento contínuo elucida que a área ocupada por macrófitas "
+        f"permanece monitorada. O limite operacional de alerta estabelecido é de {limite_alerta_ha:.2f} ha, "
+        f"assegurando a conformidade ambiental e a estabilidade operacional da UHE Risoleta Neves."
+    )
+    story.append(Paragraph(diagnostico, body_style))
 
-        if mapa_path and os.path.exists(mapa_path):
-            story.append(Image(mapa_path, width=6.2 * inch, height=8.5 * inch))
-        else:
-            story.append(Paragraph(f"<i>Imagem do mapa não encontrada para {data_cena}.</i>", styles["Normal"]))
+    # -------------------------------------------------------------------------
+    # PRANCHAS CARTOGRÁFICAS E IMAGENS RGB
+    # -------------------------------------------------------------------------
+    for rgb_img, mapa_img in zip(pranchas_rgb_png, pranchas_mapa_png):
+        if os.path.exists(rgb_img) and os.path.exists(mapa_img):
+            story.append(PageBreak())
+            story.append(Paragraph("MONITORAMENTO DE MACRÓFITAS E QUALIDADE DA ÁGUA - UHE RISOLETA NEVES (2026)", title_style))
+            story.append(Spacer(1, 5))
+            
+            # Coloca a imagem RGB e a Prancha Lado a Lado na página em formato Landscape
+            pranchas_table = Table([
+                [Image(rgb_img, width=380, height=430), Image(mapa_img, width=380, height=430)]
+            ], colWidths=[390, 390])
+            
+            pranchas_table.setStyle(TableStyle([
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('LEFTPADDING', (0,0), (-1,-1), 0),
+                ('RIGHTPADDING', (0,0), (-1,-1), 0),
+            ]))
+            story.append(pranchas_table)
 
-        story.append(PageBreak())
-
-    doc.build(story)
-    print(f"[REPORT] Relatório PDF gerado com sucesso em: {pdf_file}")
-    return str(pdf_file)
-
-
-# Alias para retrocompatibilidade
-gerar_relatorio_pdf = gerar_relatorio_consolidado
+    # Construção do documento
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"[RELATÓRIO] Relatório PDF padronizado gerado com sucesso em: {pdf_path}")
