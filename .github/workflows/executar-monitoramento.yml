@@ -28,6 +28,8 @@ jobs:
 
       - name: Executar Pipeline (Risoleta Neves)
         env:
+          COPERNICUS_USER: ${{ secrets.CDSE_CLIENT_ID }}
+          COPERNICUS_PASSWORD: ${{ secrets.CDSE_CLIENT_SECRET }}
           CDSE_CLIENT_ID: ${{ secrets.CDSE_CLIENT_ID }}
           CDSE_CLIENT_SECRET: ${{ secrets.CDSE_CLIENT_SECRET }}
         run: |
