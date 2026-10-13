@@ -33,11 +33,16 @@ class NumberedCanvas(canvas.Canvas):
 
 
 def gerar_grafico_evolucao(resultados, output_path, limite_alerta_ha=30.0):
-    """Gera o gráfico de linha de evolução temporal da área de macrófitas."""
-    meses = [r['mes'].split('/')[0] for r in resultados]
+    """Gera o gráfico de linha de evolução temporal da área de macrófitas de forma segura."""
+    meses = []
     areas = []
-    for r in resultados:
-        val_str = r.get('area', '0').replace(' ha', '').strip()
+    
+    for idx, r in enumerate(resultados):
+        # Busca a chave de identificação do mês/período de forma flexível
+        val_mes = r.get('mes') or r.get('periodo') or r.get('data') or f"Mês {idx+1}"
+        meses.append(str(val_mes).split('/')[0])
+        
+        val_str = str(r.get('area', '0')).replace(' ha', '').strip()
         try:
             areas.append(float(val_str))
         except ValueError:
@@ -137,8 +142,10 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     
     table_data = [headers]
     for r in resultados:
+        # Extração segura para a tabela também
+        mes_val = r.get('mes') or r.get('periodo') or r.get('data') or ''
         row = [
-            Paragraph(r.get('mes', ''), cell_style),
+            Paragraph(str(mes_val), cell_style),
             Paragraph(r.get('data_cena', ''), cell_style),
             Paragraph(r.get('area', ''), cell_style),
             Paragraph(f"{area_oficial_ha:.2f} ha", cell_style),
@@ -171,7 +178,7 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     # 4. Conclusão
     story.append(Paragraph("4. Conclusão e Diagnóstico Operacional", subtitle_style))
     
-    max_area = max([float(r.get('area', '0').replace(' ha', '').strip() or 0) for r in resultados] + [0])
+    max_area = max([float(str(r.get('area', '0')).replace(' ha', '').strip() or 0) for r in resultados] + [0])
     status_geral = "REGULAR" if max_area <= limite_alerta_ha else "ATENÇÃO"
     
     diagnostico = (
