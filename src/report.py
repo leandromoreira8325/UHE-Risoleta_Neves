@@ -62,7 +62,6 @@ def gerar_grafico_evolucao(resultados, output_path, limite_alerta_ha=30.0):
 
 
 def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa_png=None, output_dir="outputs", area_oficial_ha=270.0, limite_alerta_ha=30.0):
-    # Garante estritamente que sejam listas tratadas com segurança
     if not isinstance(pranchas_rgb_png, list):
         pranchas_rgb_png = [] if pranchas_rgb_png is None else [pranchas_rgb_png]
     if not isinstance(pranchas_mapa_png, list):
@@ -89,14 +88,12 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
                     pranchas_mapa_png.append(escolhido)
                     pranchas_rgb_png.append(escolhido)
 
-    # Filtragem final de segurança para garantir apenas arquivos reais nas listas
     pranchas_mapa_png = [p for p in pranchas_mapa_png if p and isinstance(p, str) and os.path.isfile(p)]
     pranchas_rgb_png = [p for p in pranchas_rgb_png if p and isinstance(p, str) and os.path.isfile(p)]
 
     pdf_path = os.path.join(output_dir, "relatorio_monitoramento_2026.pdf")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Configuração de orientação Landscape A4
     doc = SimpleDocTemplate(
         pdf_path,
         pagesize=landscape(A4),
@@ -168,13 +165,18 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     table_data = [headers]
     for r in resultados:
         mes_val = r.get('mes') or r.get('periodo') or r.get('data') or ''
+        data_cena = r.get('data_cena', 'N/D')
+        area_val = r.get('area', '0.00 ha')
+        ocup_val = r.get('ocupacao', '0.00%')
+        status_val = r.get('status', 'REGULAR')
+
         row = [
             Paragraph(str(mes_val), cell_style),
-            Paragraph(r.get('data_cena', ''), cell_style),
-            Paragraph(r.get('area', ''), cell_style),
+            Paragraph(str(data_cena), cell_style),
+            Paragraph(str(area_val), cell_style),
             Paragraph(f"{area_oficial_ha:.2f} ha", cell_style),
-            Paragraph(r.get('ocupacao', ''), cell_style),
-            Paragraph(f"<b>{r.get('status', 'REGULAR')}</b>", cell_style)
+            Paragraph(str(ocup_val), cell_style),
+            Paragraph(f"<b>{status_val}</b>", cell_style)
         ]
         table_data.append(row)
 
@@ -213,25 +215,16 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     story.append(Paragraph(diagnostico, body_style))
 
     # -------------------------------------------------------------------------
-    # PRANCHAS CARTOGRÁFICAS E IMAGENS RGB
+    # PRANCHAS CARTOGRÁFICAS (UM MAPA POR PÁGINA PARA MELHOR VISUALIZAÇÃO)
     # -------------------------------------------------------------------------
-    for rgb_img, mapa_img in zip(pranchas_rgb_png, pranchas_mapa_png):
-        if os.path.exists(rgb_img) and os.path.exists(mapa_img):
+    for mapa_img in pranchas_mapa_png:
+        if os.path.exists(mapa_img):
             story.append(PageBreak())
             story.append(Paragraph("MONITORAMENTO DE MACRÓFITAS E QUALIDADE DA ÁGUA - UHE RISOLETA NEVES (2026)", title_style))
             story.append(Spacer(1, 5))
             
-            pranchas_table = Table([
-                [Image(rgb_img, width=380, height=430), Image(mapa_img, width=380, height=430)]
-            ], colWidths=[390, 390])
-            
-            pranchas_table.setStyle(TableStyle([
-                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                ('LEFTPADDING', (0,0), (-1,-1), 0),
-                ('RIGHTPADDING', (0,0), (-1,-1), 0),
-            ]))
-            story.append(pranchas_table)
+            # Exibe apenas 1 mapa por folha em tamanho ideal (largura total otimizada sem sobreposição)
+            story.append(Image(mapa_img, width=740, height=480))
 
     # Construção do documento
     doc.build(story, canvasmaker=NumberedCanvas)
