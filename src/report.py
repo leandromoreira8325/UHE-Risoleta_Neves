@@ -62,15 +62,15 @@ def gerar_grafico_evolucao(resultados, output_path, limite_alerta_ha=30.0):
 
 
 def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa_png=None, output_dir="outputs", area_oficial_ha=270.0, limite_alerta_ha=30.0):
-    if pranchas_rgb_png is None:
-        pranchas_rgb_png = []
-    if pranchas_mapa_png is None:
-        pranchas_mapa_png = []
+    # Garante estritamente que sejam listas tratadas com segurança
+    if not isinstance(pranchas_rgb_png, list):
+        pranchas_rgb_png = [] if pranchas_rgb_png is None else [pranchas_rgb_png]
+    if not isinstance(pranchas_mapa_png, list):
+        pranchas_mapa_png = [] if pranchas_mapa_png is None else [pranchas_mapa_png]
 
     # Auto-detecção de pranchas e mapas caso as listas venham vazias
     if not pranchas_mapa_png or not pranchas_rgb_png:
         for r in resultados:
-            # Tenta encontrar arquivos correspondentes nas pastas 'outputs' ou 'data'
             data_cena = r.get('data_cena', '')
             if data_cena:
                 candidato_mapa_outputs = os.path.join(output_dir, f"mapa_composto_{data_cena}.png")
@@ -87,7 +87,6 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
                 
                 if escolhido and escolhido not in pranchas_mapa_png:
                     pranchas_mapa_png.append(escolhido)
-                    # Usa o mesmo arquivo ou uma versão RGB correspondente se houver
                     pranchas_rgb_png.append(escolhido)
 
     pdf_path = os.path.join(output_dir, "relatorio_monitoramento_2026.pdf")
