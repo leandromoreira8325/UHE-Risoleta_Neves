@@ -6,6 +6,7 @@ Busca da melhor cena Sentinel-2 L2A com suporte a TCI (RGB) e sessão customizad
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 import geopandas as gpd
 from pystac_client import Client
@@ -51,8 +52,12 @@ def obter_bbox() -> list[float]:
 def buscar_melhor_cena(data_inicial: str, data_final: str) -> dict | None:
     catalog = Client.open(STAC_URL, stac_io=CustomStacIO())
     bbox = obter_bbox()
+    itens = []
 
     for limite_nuvens in [20, 50]:
+        # Pausa preventiva para respeitar o limite de taxa (Rate Limit / WAF) da API
+        time.sleep(1.5)
+        
         search = catalog.search(
             collections=["sentinel-2-l2a"],
             bbox=bbox,
@@ -60,9 +65,13 @@ def buscar_melhor_cena(data_inicial: str, data_final: str) -> dict | None:
             query={"eo:cloud_cover": {"lt": limite_nuvens}},
         )
 
-        itens = list(search.items())
-        if itens:
-            break
+        try:
+            itens = list(search.items())
+            if itens:
+                break
+        except Exception as e:
+            print(f"[AVISO] Tentativa de busca falhou para {data_inicial} a {data_final}: {e}")
+            time.sleep(3) # Pausa maior em caso de reativação por erro
 
     if not itens:
         print(f"[AVISO] Nenhuma cena disponível entre {data_inicial} e {data_final}.")
