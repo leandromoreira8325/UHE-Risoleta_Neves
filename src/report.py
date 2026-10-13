@@ -68,26 +68,30 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     if not isinstance(pranchas_mapa_png, list):
         pranchas_mapa_png = [] if pranchas_mapa_png is None else [pranchas_mapa_png]
 
-    # Auto-detecção de pranchas e mapas caso as listas venham vazias
+    # Auto-detecção rigorosa de pranchas e mapas caso as listas venham vazias
     if not pranchas_mapa_png or not pranchas_rgb_png:
         for r in resultados:
             data_cena = r.get('data_cena', '')
             if data_cena:
-                candidato_mapa_outputs = os.path.join(output_dir, f"mapa_composto_{data_cena}.png")
-                candidato_mapa_data = os.path.join("data", f"mapa_composto_{data_cena}.png")
-                candidato_mapth_outputs = os.path.join(output_dir, f"mapa_macrophitas_{data_cena.replace('-', '_')[:7]}.jpg")
+                candidatos = [
+                    os.path.join(output_dir, f"mapa_composto_{data_cena}.png"),
+                    os.path.join("data", f"mapa_composto_{data_cena}.png"),
+                    os.path.join(output_dir, f"mapa_macrophitas_{data_cena.replace('-', '_')[:7]}.jpg")
+                ]
                 
                 escolhido = None
-                if os.path.exists(candidato_mapa_outputs):
-                    escolhido = candidato_mapa_outputs
-                elif os.path.exists(candidato_mapa_data):
-                    escolhido = candidato_mapa_data
-                elif os.path.exists(candidato_mapth_outputs):
-                    escolhido = candidato_mapth_outputs
+                for cand in candidatos:
+                    if cand and os.path.exists(cand) and os.path.isfile(cand):
+                        escolhido = cand
+                        break
                 
                 if escolhido and escolhido not in pranchas_mapa_png:
                     pranchas_mapa_png.append(escolhido)
                     pranchas_rgb_png.append(escolhido)
+
+    # Filtragem final de segurança para garantir apenas arquivos reais nas listas
+    pranchas_mapa_png = [p for p in pranchas_mapa_png if p and isinstance(p, str) and os.path.isfile(p)]
+    pranchas_rgb_png = [p for p in pranchas_rgb_png if p and isinstance(p, str) and os.path.isfile(p)]
 
     pdf_path = os.path.join(output_dir, "relatorio_monitoramento_2026.pdf")
     os.makedirs(output_dir, exist_ok=True)
