@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
@@ -57,7 +57,12 @@ def gerar_grafico_evolucao(resultados, output_path, limite_alerta_ha=30.0):
     plt.close()
 
 
-def gerar_relatorio_consolidado(resultados, pranchas_rgb_png, pranchas_mapa_png, output_dir, area_oficial_ha=270.0, limite_alerta_ha=30.0):
+def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa_png=None, output_dir="outputs", area_oficial_ha=270.0, limite_alerta_ha=30.0):
+    if pranchas_rgb_png is None:
+        pranchas_rgb_png = []
+    if pranchas_mapa_png is None:
+        pranchas_mapa_png = []
+
     pdf_path = os.path.join(output_dir, "relatorio_monitoramento_2026.pdf")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -110,7 +115,7 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png, pranchas_mapa_png,
     # 1. Metodologia
     story.append(Paragraph("1. Metodologia Completa de Processamento Geoespacial", subtitle_style))
     desc_metodo = (
-        f"O monitoramento utiliza automação via API no Copernicus Data Space Ecosystem para obtenção de imagens multispectrais "
+        f"O monitoramento utiliza automação via API no Copernicus Data Space Ecosystem para obtenção de imagens multiespectrais "
         f"de alta resolução do satélite Sentinel-2/MSI. Para cada período mensal, o sistema seleciona a melhor cena disponível com menor índice "
         f"de nebulosidade. Um buffer geométrico negativo de 12 metros é aplicado na poligonal do reservatório para eliminar ruídos de margem. "
         f"O cálculo de biomassa aquática emprega os índices NDVI e MNDWI sobre a área oficial de espelho d'água de {area_oficial_ha:.2f} hectares."
@@ -166,7 +171,6 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png, pranchas_mapa_png,
     # 4. Conclusão
     story.append(Paragraph("4. Conclusão e Diagnóstico Operacional", subtitle_style))
     
-    # Avaliação de alerta
     max_area = max([float(r.get('area', '0').replace(' ha', '').strip() or 0) for r in resultados] + [0])
     status_geral = "REGULAR" if max_area <= limite_alerta_ha else "ATENÇÃO"
     
@@ -186,7 +190,6 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png, pranchas_mapa_png,
             story.append(Paragraph("MONITORAMENTO DE MACRÓFITAS E QUALIDADE DA ÁGUA - UHE RISOLETA NEVES (2026)", title_style))
             story.append(Spacer(1, 5))
             
-            # Coloca a imagem RGB e a Prancha Lado a Lado na página em formato Landscape
             pranchas_table = Table([
                 [Image(rgb_img, width=380, height=430), Image(mapa_img, width=380, height=430)]
             ], colWidths=[390, 390])
