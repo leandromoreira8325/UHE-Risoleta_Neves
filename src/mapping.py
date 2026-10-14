@@ -114,7 +114,7 @@ def gerar_mapa_macrophitas(
         zorder=3,
     )
 
-    # Legenda reposicionada no canto inferior direito para não tampar a barragem / final do reservatório
+    # Legenda e Título
     patch_agua = mpatches.Patch(color="#1f78b4", fill=False, label="Espelho d'Água (282 ha)")
     patch_macro = mpatches.Patch(color="#e31a1c", label=f"Macrófitas ({area_ha:.2f} ha - {pct:.2f}%)")
 
@@ -130,13 +130,19 @@ def gerar_mapa_macrophitas(
     ax.tick_params(labelsize=8)
     ax.grid(True, linestyle=":", alpha=0.4, zorder=0)
     
-    # Legenda ajustada para o canto inferior direito
-    ax.legend(handles=[patch_agua, patch_macro], loc="lower right", framealpha=0.95, fontsize=8.5)
+    # Legenda posicionada com precisão no canto inferior direito, sem invadir o corpo d'água / barragem
+    ax.legend(
+        handles=[patch_agua, patch_macro], 
+        loc="lower right", 
+        bbox_to_anchor=(0.98, 0.02), 
+        framealpha=0.95, 
+        fontsize=8.5
+    )
 
-    # Ajuste dos limites da visualização com margem
+    # Ajuste dos limites da visualização com margem lateral e inferior expandida
     minx, miny, maxx, maxy = gdf.total_bounds
-    margin_x = (maxx - minx) * 0.04
-    margin_y = (maxy - miny) * 0.04
+    margin_x = (maxx - minx) * 0.08
+    margin_y = (maxy - miny) * 0.12
     ax.set_xlim([minx - margin_x, maxx + margin_x])
     ax.set_ylim([miny - margin_y, maxy + margin_y])
 
