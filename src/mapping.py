@@ -114,7 +114,7 @@ def gerar_mapa_macrophitas(
         zorder=3,
     )
 
-    # Legenda e Título com os 282 ha corrigidos
+    # Legenda reposicionada no canto inferior direito para não tampar a barragem / final do reservatório
     patch_agua = mpatches.Patch(color="#1f78b4", fill=False, label="Espelho d'Água (282 ha)")
     patch_macro = mpatches.Patch(color="#e31a1c", label=f"Macrófitas ({area_ha:.2f} ha - {pct:.2f}%)")
 
@@ -129,7 +129,9 @@ def gerar_mapa_macrophitas(
     ax.set_ylabel("Latitude (WGS84)", fontsize=8.5)
     ax.tick_params(labelsize=8)
     ax.grid(True, linestyle=":", alpha=0.4, zorder=0)
-    ax.legend(handles=[patch_agua, patch_macro], loc="upper right", framealpha=0.95, fontsize=8.5)
+    
+    # Legenda ajustada para o canto inferior direito
+    ax.legend(handles=[patch_agua, patch_macro], loc="lower right", framealpha=0.95, fontsize=8.5)
 
     # Ajuste dos limites da visualização com margem
     minx, miny, maxx, maxy = gdf.total_bounds
