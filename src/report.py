@@ -41,9 +41,13 @@ def gerar_grafico_evolucao(resultados, output_path, limite_alerta_ha=30.0):
         val_mes = r.get('mes') or r.get('periodo') or r.get('data') or f"Mês {idx+1}"
         meses.append(str(val_mes).split('/')[0])
         
-        val_str = str(r.get('area', '0')).replace(' ha', '').strip()
+        area_raw = r.get('area') if r.get('area') is not None else r.get('area_ha', 0.0)
         try:
-            areas.append(float(val_str))
+            if isinstance(area_raw, str):
+                val_str = area_raw.replace(' ha', '').strip()
+                areas.append(float(val_str))
+            else:
+                areas.append(float(area_raw))
         except ValueError:
             areas.append(0.0)
 
@@ -75,7 +79,8 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
                 candidatos = [
                     os.path.join(output_dir, f"mapa_composto_{data_cena}.png"),
                     os.path.join("data", f"mapa_composto_{data_cena}.png"),
-                    os.path.join(output_dir, f"mapa_macrophitas_{data_cena.replace('-', '_')[:7]}.jpg")
+                    os.path.join(output_dir, f"mapa_macrophitas_{data_cena.replace('-', '_')[:7]}.jpg"),
+                    os.path.join(output_dir, f"mapa_macrophitas_{data_cena}.jpg")
                 ]
                 
                 escolhido = None
@@ -166,8 +171,23 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     for r in resultados:
         mes_val = r.get('mes') or r.get('periodo') or r.get('data') or ''
         data_cena = r.get('data_cena', 'N/D')
-        area_val = r.get('area', '0.00 ha')
-        ocup_val = r.get('ocupacao', '0.00%')
+        
+        # Suporte flexível para chaves 'area' ou 'area_ha'
+        area_raw = r.get('area') if r.get('area') is not None else r.get('area_ha', 0.0)
+        if isinstance(area_raw, (int, float)):
+            area_val = f"{area_raw:.2f} ha"
+        else:
+            area_val = str(area_raw)
+            if not area_val.endswith("ha"):
+                area_val += " ha"
+
+        # Suporte flexível para chaves 'ocupacao' ou 'percentual'
+        ocup_raw = r.get('ocupacao') if r.get('ocupacao') is not None else r.get('percentual', 0.0)
+        if isinstance(ocup_raw, (int, float)):
+            ocup_val = f"{ocup_raw:.2f}%"
+        else:
+            ocup_val = str(ocup_raw)
+
         status_val = r.get('status', 'REGULAR')
 
         row = [
@@ -204,7 +224,16 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     # 4. Conclusão
     story.append(Paragraph("4. Conclusão e Diagnóstico Operacional", subtitle_style))
     
-    max_area = max([float(str(r.get('area', '0')).replace(' ha', '').strip() or 0) for r in resultados] + [0])
+    max_area = 0.0
+    for r in resultados:
+        val = r.get('area') if r.get('area') is not None else r.get('area_ha', 0.0)
+        try:
+            if isinstance(val, str):
+                val = float(val.replace(' ha', '').strip())
+            max_area = max(max_area, float(val))
+        except ValueError:
+            pass
+
     status_geral = "REGULAR" if max_area <= limite_alerta_ha else "ATENÇÃO"
     
     diagnostico = (
@@ -215,15 +244,13 @@ def gerar_relatorio_consolidado(resultados, pranchas_rgb_png=None, pranchas_mapa
     story.append(Paragraph(diagnostico, body_style))
 
     # -------------------------------------------------------------------------
-    # PRANCHAS CARTOGRÁFICAS (UM MAPA POR PÁGINA PARA MELHOR VISUALIZAÇÃO)
+    # PRANCHAS CARTOGRÁFICAS (UM MAPA POR PÁGINA)
     # -------------------------------------------------------------------------
     for mapa_img in pranchas_mapa_png:
         if os.path.exists(mapa_img):
             story.append(PageBreak())
             story.append(Paragraph("MONITORAMENTO DE MACRÓFITAS E QUALIDADE DA ÁGUA - UHE RISOLETA NEVES (2026)", title_style))
             story.append(Spacer(1, 5))
-            
-            # Exibe apenas 1 mapa por folha em tamanho ideal (largura total otimizada sem sobreposição)
             story.append(Image(mapa_img, width=740, height=480))
 
     # Construção do documento
